@@ -5,17 +5,13 @@
 
 using namespace std;
 
-void drawObject(MovingObject &obj, cv::Mat &liveFeed)
-{
-  cv::rectangle(liveFeed, obj.getBoundingBox(), cv::Scalar(255, 255, 255));
-}
-
 void search_moving_objects(cv::Mat &threshold, cv::Mat &liveFeed)
 {
   int const max_objects = 50;
   double const min_object_area = 20 * 20;
   vector<vector<cv::Point>> contours;
   vector<cv::Vec4i> hierarchy;
+  vector<MovingObject> objects;
 
   cv::findContours(threshold, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
 
@@ -29,12 +25,18 @@ void search_moving_objects(cv::Mat &threshold, cv::Mat &liveFeed)
       if (moment.m00 > min_object_area) {
 
         MovingObject obj(contours[i]);
-        drawObject(obj, liveFeed);
 
+        int len = objects.size();
+        for (int i = 0; i < len; i++) {
+          if (obj.inRange(objects[i])) {
+            obj.setColor(cv::Scalar(0, 255, 0));
+            objects.emplace_back(obj, objects[i]);
+          }
+        }
+
+        objects.emplace_back(std::move(obj));
       }
-
     }
-
 
   } else if (contours.empty()) {
     cv::putText(liveFeed, "no movement detected",
@@ -45,6 +47,12 @@ void search_moving_objects(cv::Mat &threshold, cv::Mat &liveFeed)
                 cv::Point(50, 50), 
                 0, 0.5, cv::Scalar(255, 255, 255));
   }
+
+  for_each(objects.begin(), objects.end(), [&liveFeed](MovingObject const &o)
+           {
+             o.draw(liveFeed);
+           });
+
 }
 
 void on_trackbar( int, void* ) { }
@@ -56,7 +64,6 @@ void refine_diff_image(cv::Mat const &diff, cv::Mat &threshold)
   static int blur_size = 50;
   static int threshold_sensitivity2 = 30;
  
-
   {
     cv::namedWindow("refine_diff_image", 0);
     cv::createTrackbar("Threshold sensitivity", "refine_diff_image", &threshold_sensitivity, 255, on_trackbar);
@@ -102,8 +109,9 @@ void capture_loop(cv::VideoCapture &camera)
 
     cv::imshow("Live Feed", image);
 
-    // check for button press for 10ms. necessary for opencv, to refresh windows
-    switch (cv::waitKey(10)) {
+    // check for button press for 10ms. necessary for opencv to refresh windows
+    char key = cv::waitKey(10);
+    switch (key) {
       case 'q':
         exit = true;
         break;
