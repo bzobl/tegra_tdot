@@ -63,6 +63,28 @@ cv::Mat &&use_farneback(cv::gpu::GpuMat *last, cv::gpu::GpuMat *now,
   colorizeFlow(flowx, flowy, result);
 }
 
+cv::Mat &&use_brox(cv::gpu::GpuMat *last, cv::gpu::GpuMat *now,
+                   timepoint &calc_start, timepoint &calc_stop, 
+                   timepoint &download_start, timepoint &download_stop)
+{
+  float alpha = 0.197;
+  float scale = 0.8;
+  float gamma = 50.0;
+  int inner_iterations = 10;
+  int outer_iterations = 77;
+  int solver_iterations = 10;
+
+  GpuMat d_fu, d_fv;
+
+  BroxOpticalFlow d_flow(alpha, gamma, scale, inner_iterations, outer_iterations, solver_iterations);
+
+  d_flow(*last, *now, d_fu, d_fv);
+
+  Mat flowField;
+  getFlowField(Mat(d_fu), Mat(d_fv), flowField);
+  return flowField;
+}
+
 void capture_loop(cv::VideoCapture &camera)
 {
   timepoint upload_start, upload_stop,
@@ -71,6 +93,7 @@ void capture_loop(cv::VideoCapture &camera)
             total_start, total_stop;
 
   bool exit = false;
+  bool farneback = false;
   cv::Mat image, grayscale, result;
 
   cv::gpu::GpuMat gImg1, gImg2;
@@ -94,7 +117,11 @@ void capture_loop(cv::VideoCapture &camera)
     nowGImg->upload(grayscale);
     upload_stop = std::chrono::high_resolution_clock::now();
 
-    result = use_farneback(lastGImg, nowGImg, calc_start, calc_stop, download_start, download_stop);
+    if (farneback) {
+      result = use_farneback(lastGImg, nowGImg, calc_start, calc_stop, download_start, download_stop);
+    } else {
+      result = use_brox(lastGImg, nowGImg, calc_start, calc_stop, download_start, download_stop);
+    }
 
     cv::imshow("Live Feed", result);
 
