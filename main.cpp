@@ -88,7 +88,6 @@ void getFlowField(const Mat& u, const Mat& v, Mat& flowField)
         const float* ptr_u = u.ptr<float>(i);
         const float* ptr_v = v.ptr<float>(i);
 
-
         Vec4b* row = flowField.ptr<Vec4b>(i);
 
         for (int j = 0; j < flowField.cols; ++j)
@@ -140,6 +139,9 @@ void capture_loop(cv::VideoCapture &camera)
 
   // read first image, before entering loop
   camera.read(image);
+  if (!farneback) {
+    image.convertTo(image, CV_32F, 1.0 / 255.0);
+  }
   cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
   nowGImg->upload(grayscale);
 
@@ -151,6 +153,10 @@ void capture_loop(cv::VideoCapture &camera)
     // take new image and convert to grayscale
     upload_start = std::chrono::high_resolution_clock::now();
     camera.read(image);
+
+    if (!farneback) {
+      image.convertTo(image, CV_32F, 1.0 / 255.0);
+    }
     cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
     nowGImg->upload(grayscale);
     upload_stop = std::chrono::high_resolution_clock::now();
