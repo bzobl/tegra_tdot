@@ -65,7 +65,7 @@ void capture_loop(cv::VideoCapture &camera)
     cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
     nowGImg->upload(grayscale);
 
-    flow(lastGImg, nowGImg, d_flowx, d_flowy);
+    flow(*lastGImg, *nowGImg, d_flowx, d_flowy);
     d_flowx.download(flowx);
     d_flowy.download(flowy);
 
