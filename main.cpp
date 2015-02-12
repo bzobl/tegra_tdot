@@ -42,7 +42,9 @@ void capture_loop(cv::VideoCapture &camera)
 {
   bool exit = false;
   cv::Mat image, grayscale;
-  cv::gpu::GpuMat lastGImg, nowGImg;
+  cv::gpu::GpuMat gImg1, gImg2;
+  cv::gpu::GpuMat *nowGImg = &gImg1;
+  cv::gpu::GpuMat *lastGImg = &gImg2;
 
   FarnebackOpticalFlow flow;
 
@@ -52,15 +54,16 @@ void capture_loop(cv::VideoCapture &camera)
   // read first image, before entering loop
   camera.read(image);
   cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
-  nowGImg = cv::gpu::GpuMat(grayscale);
+  nowGImg->upload(grayscale);
 
   while (!exit) {
-    lastGImg = nowGImg;
+    // swap pointers to avoid reallocating memory on gpu
+    ::swap(nowGImg, lastGImg);
 
     // take new image and convert to grayscale
     camera.read(image);
     cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
-    nowGImg = cv::gpu::GpuMat(grayscale);
+    nowGImg->upload(grayscale);
 
     flow(lastGImg, nowGImg, d_flowx, d_flowy);
     d_flowx.download(flowx);
