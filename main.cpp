@@ -46,7 +46,8 @@ void capture_loop(cv::VideoCapture &camera)
   time upload_start, upload_stop,
        calc_start, calc_stop,
        download_start, download_stop,
-       show_start, show_stop;
+       show_start, show_stop,
+       total_start, total_stop;
 
   bool exit = false;
   cv::Mat image, grayscale;
@@ -65,6 +66,7 @@ void capture_loop(cv::VideoCapture &camera)
   nowGImg->upload(grayscale);
 
   while (!exit) {
+    total_start = std::chrono::high_resolution_clock::now();
     // swap pointers to avoid reallocating memory on gpu
     ::swap(nowGImg, lastGImg);
 
@@ -89,6 +91,7 @@ void capture_loop(cv::VideoCapture &camera)
     cv::imshow("Live Feed", result);
     show_stop = std::chrono::high_resolution_clock::now();
 
+    total_stop = std::chrono::high_resolution_clock::now();
     // print times
     std::cout << "Times (in ms): "
               << std::chrono::duration_cast<std::chrono::milliseconds>(upload_stop - upload_start).count()
@@ -98,6 +101,8 @@ void capture_loop(cv::VideoCapture &camera)
               << std::chrono::duration_cast<std::chrono::milliseconds>(download_stop - download_start).count()
               << " | "
               << std::chrono::duration_cast<std::chrono::milliseconds>(show_stop - show_start).count()
+              << " | "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(total_stop - total_start).count()
               << std::endl;
 
     // check for button press for 10ms. necessary for opencv to refresh windows
