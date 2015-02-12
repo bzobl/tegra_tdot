@@ -9,7 +9,7 @@ RM = rm -f
 
 C_INCL = ./include /usr/include
 INCLUDES = $(addprefix -I, $(C_INCL))
-C_LIB = opencv_core opencv_highgui opencv_video opencv_imgproc opencv_tegra opencv_gpu
+C_LIB = opencv_core opencv_highgui opencv_video opencv_imgproc opencv_gpu
 LIBS = $(addprefix -l, $(C_LIB))
 
 CPP_SRC  = main.cpp
@@ -33,6 +33,9 @@ $(PROJECT): $(CPP_OBJS)
 	$(CC) -o $@ $(CFLAGS) $(INCLUDES) $(CPP_OBJS) $(LIBS)
 	@echo 'Finished building $@'
 	@echo ' '
+
+tegra:
+	make C_LIB+=opencv_tegra
 
 schroot:
 	schroot -c exp -- make $(PROJECT)
