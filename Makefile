@@ -9,11 +9,10 @@ RM = rm -f
 
 C_INCL = ./include /usr/include
 INCLUDES = $(addprefix -I, $(C_INCL))
-C_LIB = opencv_core opencv_highgui opencv_video opencv_imgproc
+C_LIB = opencv_core opencv_highgui opencv_video opencv_imgproc opencv_tegra opencv_gpu
 LIBS = $(addprefix -l, $(C_LIB))
 
-CPP_SRC  = main.cpp 					\
-					 movingObject.cpp
+CPP_SRC  = main.cpp
 
 CPP_H    = $(wildcard $(C_INCL)/*.h)
 
