@@ -69,9 +69,9 @@ void capture_loop(cv::VideoCapture &camera)
     d_flowx.download(flowx);
     d_flowy.download(flowy);
 
-    colorizeFlow(flowx, flowy, result);
+    //colorizeFlow(flowx, flowy, result);
 
-    cv::imshow("Live Feed", result);
+    cv::imshow("Live Feed", image);
 
     // check for button press for 10ms. necessary for opencv to refresh windows
     char key = cv::waitKey(10);
