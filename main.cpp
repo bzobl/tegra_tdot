@@ -11,6 +11,8 @@ using namespace std;
 using namespace cv;
 using namespace cv::gpu;
 
+using timepoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
+
 template <typename T>
 inline T mapVal(T x, T a, T b, T c, T d)
 {
@@ -40,25 +42,40 @@ static void colorizeFlow(const Mat &u, const Mat &v, Mat &dst)
     }
 }
 
-void capture_loop(cv::VideoCapture &camera)
+cv::Mat &&use_farneback(cv::gpu::GpuMat *last, cv::gpu::GpuMat *now,
+                        timepoint &calc_start, timepoint &calc_stop, 
+                        timepoint &download_start, timepoint &download_stop)
 {
-  using time = std::chrono::time_point<std::chrono::high_resolution_clock>;
-  time upload_start, upload_stop,
-       calc_start, calc_stop,
-       download_start, download_stop,
-       show_start, show_stop,
-       total_start, total_stop;
-
-  bool exit = false;
-  cv::Mat image, grayscale;
-  cv::gpu::GpuMat gImg1, gImg2;
-  cv::gpu::GpuMat *nowGImg = &gImg1;
-  cv::gpu::GpuMat *lastGImg = &gImg2;
-
   FarnebackOpticalFlow flow;
 
   GpuMat d_flowx, d_flowy;
   Mat flowxy, flowx, flowy, result;
+
+  calc_start = std::chrono::high_resolution_clock::now();
+  flow(*last, *now, d_flowx, d_flowy);
+  calc_stop = std::chrono::high_resolution_clock::now();
+
+  download_start = std::chrono::high_resolution_clock::now();
+  d_flowx.download(flowx);
+  d_flowy.download(flowy);
+  download_stop = std::chrono::high_resolution_clock::now();
+
+  colorizeFlow(flowx, flowy, result);
+}
+
+void capture_loop(cv::VideoCapture &camera)
+{
+  timepoint upload_start, upload_stop,
+            calc_start, calc_stop,
+            download_start, download_stop,
+            total_start, total_stop;
+
+  bool exit = false;
+  cv::Mat image, grayscale, result;
+
+  cv::gpu::GpuMat gImg1, gImg2;
+  cv::gpu::GpuMat *nowGImg = &gImg1;
+  cv::gpu::GpuMat *lastGImg = &gImg2;
 
   // read first image, before entering loop
   camera.read(image);
@@ -77,19 +94,9 @@ void capture_loop(cv::VideoCapture &camera)
     nowGImg->upload(grayscale);
     upload_stop = std::chrono::high_resolution_clock::now();
 
-    calc_start = std::chrono::high_resolution_clock::now();
-    flow(*lastGImg, *nowGImg, d_flowx, d_flowy);
-    calc_stop = std::chrono::high_resolution_clock::now();
+    result = use_farneback(lastGImg, nowGImg, calc_start, calc_stop, download_start, download_stop);
 
-    download_start = std::chrono::high_resolution_clock::now();
-    d_flowx.download(flowx);
-    d_flowy.download(flowy);
-    download_stop = std::chrono::high_resolution_clock::now();
-
-    show_start = std::chrono::high_resolution_clock::now();
-    colorizeFlow(flowx, flowy, result);
     cv::imshow("Live Feed", result);
-    show_stop = std::chrono::high_resolution_clock::now();
 
     total_stop = std::chrono::high_resolution_clock::now();
     // print times
@@ -99,8 +106,6 @@ void capture_loop(cv::VideoCapture &camera)
               << std::chrono::duration_cast<std::chrono::milliseconds>(calc_stop - calc_start).count()
               << " | "
               << std::chrono::duration_cast<std::chrono::milliseconds>(download_stop - download_start).count()
-              << " | "
-              << std::chrono::duration_cast<std::chrono::milliseconds>(show_stop - show_start).count()
               << " | "
               << std::chrono::duration_cast<std::chrono::milliseconds>(total_stop - total_start).count()
               << std::endl;
