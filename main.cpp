@@ -90,14 +90,14 @@ void capture_loop(cv::VideoCapture &camera)
     show_stop = std::chrono::high_resolution_clock::now();
 
     // print times
-    std::cout << "Times (in ns): "
-              << std::chrono::duration_cast<std::chrono::nanoseconds>(upload_stop - upload_start).count()
+    std::cout << "Times (in ms): "
+              << std::chrono::duration_cast<std::chrono::milliseconds>(upload_stop - upload_start).count()
               << " | "
-              << std::chrono::duration_cast<std::chrono::nanoseconds>(calc_stop - calc_start).count()
+              << std::chrono::duration_cast<std::chrono::milliseconds>(calc_stop - calc_start).count()
               << " | "
-              << std::chrono::duration_cast<std::chrono::nanoseconds>(download_stop - download_start).count()
+              << std::chrono::duration_cast<std::chrono::milliseconds>(download_stop - download_start).count()
               << " | "
-              << std::chrono::duration_cast<std::chrono::nanoseconds>(show_stop - show_start).count()
+              << std::chrono::duration_cast<std::chrono::milliseconds>(show_stop - show_start).count()
               << std::endl;
 
     // check for button press for 10ms. necessary for opencv to refresh windows
