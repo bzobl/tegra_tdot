@@ -115,10 +115,14 @@ cv::Mat use_brox(cv::gpu::GpuMat *last, cv::gpu::GpuMat *now,
 
   BroxOpticalFlow d_flow(alpha, gamma, scale, inner_iterations, outer_iterations, solver_iterations);
 
+  calc_start = std::chrono::high_resolution_clock::now();
   d_flow(*last, *now, d_fu, d_fv);
+  calc_stop = std::chrono::high_resolution_clock::now();
 
+  download_start = std::chrono::high_resolution_clock::now();
   Mat flowField;
   getFlowField(Mat(d_fu), Mat(d_fv), flowField);
+  download_stop = std::chrono::high_resolution_clock::now();
   return flowField;
 }
 
