@@ -1,3 +1,5 @@
+#include <chrono>
+
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 #include "opencv2/core/core.hpp"
@@ -40,6 +42,12 @@ static void colorizeFlow(const Mat &u, const Mat &v, Mat &dst)
 
 void capture_loop(cv::VideoCapture &camera)
 {
+  using time = std::chrono::time_point<std::chrono::high_resolution_clock>;
+  time upload_start, upload_stop,
+       calc_start, calc_stop,
+       download_start, download_stop,
+       show_start, show_stop;
+
   bool exit = false;
   cv::Mat image, grayscale;
   cv::gpu::GpuMat gImg1, gImg2;
@@ -61,17 +69,36 @@ void capture_loop(cv::VideoCapture &camera)
     ::swap(nowGImg, lastGImg);
 
     // take new image and convert to grayscale
+    upload_start = std::chrono::high_resolution_clock::now();
     camera.read(image);
     cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
     nowGImg->upload(grayscale);
+    upload_stop = std::chrono::high_resolution_clock::now();
 
+    calc_start = std::chrono::high_resolution_clock::now();
     flow(*lastGImg, *nowGImg, d_flowx, d_flowy);
+    calc_stop = std::chrono::high_resolution_clock::now();
+
+    download_start = std::chrono::high_resolution_clock::now();
     d_flowx.download(flowx);
     d_flowy.download(flowy);
+    download_stop = std::chrono::high_resolution_clock::now();
 
-    //colorizeFlow(flowx, flowy, result);
+    show_start = std::chrono::high_resolution_clock::now();
+    colorizeFlow(flowx, flowy, result);
+    cv::imshow("Live Feed", result);
+    show_stop = std::chrono::high_resolution_clock::now();
 
-    cv::imshow("Live Feed", image);
+    // print times
+    std::cout << "Times (in ns): "
+              << std::chrono::duration_cast<std::chrono::nanoseconds>(upload_stop - upload_start).count()
+              << " | "
+              << std::chrono::duration_cast<std::chrono::nanoseconds>(calc_stop - calc_start).count()
+              << " | "
+              << std::chrono::duration_cast<std::chrono::nanoseconds>(download_stop - download_start).count()
+              << " | "
+              << std::chrono::duration_cast<std::chrono::nanoseconds>(show_stop - show_start).count()
+              << std::endl;
 
     // check for button press for 10ms. necessary for opencv to refresh windows
     char key = cv::waitKey(10);
