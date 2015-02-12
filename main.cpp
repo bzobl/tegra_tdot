@@ -63,9 +63,9 @@ cv::Mat &&use_farneback(cv::gpu::GpuMat *last, cv::gpu::GpuMat *now,
   colorizeFlow(flowx, flowy, result);
 }
 
-cv::Mat &&use_brox(cv::gpu::GpuMat *last, cv::gpu::GpuMat *now,
-                   timepoint &calc_start, timepoint &calc_stop, 
-                   timepoint &download_start, timepoint &download_stop)
+cv::Mat use_brox(cv::gpu::GpuMat *last, cv::gpu::GpuMat *now,
+                 timepoint &calc_start, timepoint &calc_stop, 
+                 timepoint &download_start, timepoint &download_stop)
 {
   float alpha = 0.197;
   float scale = 0.8;
