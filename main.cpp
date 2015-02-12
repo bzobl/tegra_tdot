@@ -104,9 +104,10 @@ int main(int argc, char **argv)
   int gpu = 0;
   cv::gpu::setDevice(gpu);
   cv::gpu::resetDevice();
+  cv::gpu::DeviceInfo info;
   std::cout << "using GPU" << gpu << ": "
-            << cv::gpu::freeMemory() / 1024 / 1024 << " / "
-            << cv::gpu::totalMemory() / 1024 / 1024 << " MB in use" << std::endl;
+            << info.freeMemory() / 1024 / 1024 << " / "
+            << info.totalMemory() / 1024 / 1024 << " MB in use" << std::endl;
 
   capture_loop(camera);
 
