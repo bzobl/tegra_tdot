@@ -106,7 +106,7 @@ void capture_loop(cv::VideoCapture &camera)
   cv::Mat lastGrayscale, nowGrayscale;
   cv::Mat diff, thresh;
 
-  string const face_xml = "face.xml";
+  string const face_xml = "./face.xml";
   //string const face_xml = "./haarcascade_frontalface_default.xml";
   cv::CascadeClassifier face_cascade;
   cv::gpu::CascadeClassifier_GPU face_cascade_gpu;
