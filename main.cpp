@@ -137,12 +137,11 @@ void capture_loop(cv::VideoCapture &camera)
                           face.x - face.width/4, face.y - hat->height(face.width));
     }
 
-    t = (double) getTickCount() - t;
-    t /= getTickFrequency();
+    t = ((double) getTickCount() - t) / getTickFrequency();
     std::stringstream ss;
-    ss << "FPS: " << 1/t;
+    ss << "Time: " << t*1000 << "ms | FPS: " << 1/t;
 
-    cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
+    cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(0, 0, 0));
 
     cv::imshow("Live Feed", image);
 
