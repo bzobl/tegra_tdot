@@ -8,6 +8,51 @@
 using namespace std;
 using namespace cv;
 
+class AlphaImage {
+
+private:
+  cv::Mat color;
+  cv::Mat alpha;
+
+  double ratio;
+
+public:
+  AlphaImage(string filename)
+  {
+    cv::Mat image = cv::imread(filename, CV_LOAD_IMAGE_UNCHANGED);
+    color = cv::Mat(image.rows, image.cols, CV_8UC3);
+    alpha = cv::Mat(image.rows, image.cols, CV_8UC1);
+    Mat out[] = {color, alpha};
+    int from_to[] = {0, 0, 1, 1, 2, 2, 3, 3};
+    cv::mixChannels(&image, 1, out, 2, from_to, 4);
+
+    ratio = image.cols / image.rows;
+  }
+
+  int width() const { return color.cols; }
+  int height() const { return color.rows; }
+
+  int height(int width) const { return color.rows / ratio; }
+
+  void write_to_image(cv::Mat &image, int width, int x, int y)
+  {
+    //scale image
+    cv::Mat c, a;
+    cv::resize(color, c, Size(width, width / ratio), 1.0, 1.0, INTER_CUBIC);
+    cv::resize(alpha, a, Size(width, width / ratio), 1.0, 1.0, INTER_CUBIC);
+
+    for (int i = 0; i < c.cols; i++) {
+      for (int j = 0; j < c.rows; j++) {
+        if (a.at<uchar>(j, i) > 0) {
+          if (((y + j) > 0) && ((x + i) > 0)) {
+            image.at<Vec3b>(y + j, x + i) = c.at<Vec3b>(j, i);
+          }
+        }
+      }
+    }
+  }
+};
+
 vector<cv::Rect> run_facerecognition(cv::Mat &live_image, cv::CascadeClassifier &cascade)
 {
   vector<cv::Rect> faces;
@@ -25,24 +70,6 @@ vector<cv::Rect> run_facerecognition(cv::Mat &live_image, cv::CascadeClassifier 
   return faces;
 }
 
-void insert_alpha_image(cv::Mat &result, cv::Rect roi, cv::Mat image)
-{
-  cv::Mat imageBGR(image.rows, image.cols, CV_8UC3);
-  cv::Mat imageALPHA(image.rows, image.cols, CV_8UC1);
-  Mat out[] = {imageBGR, imageALPHA};
-  int from_to[] = {0, 0, 1, 1, 2, 2, 3, 3};
-
-  cv::mixChannels(&image, 1, out, 2, from_to, 4);
-
-  for (int i = 0; i < roi.width; i++) {
-    for (int j = 0; j < roi.height; j++) {
-      if (imageALPHA.at<uchar>(j, i) > 0) {
-        result.at<Vec3b>(roi.y + j, roi.x + i) = imageBGR.at<Vec3b>(j, i);
-      }
-    }
-  }
-}
-
 void capture_loop(cv::VideoCapture &camera)
 {
   bool exit = false;
@@ -50,13 +77,13 @@ void capture_loop(cv::VideoCapture &camera)
   cv::Mat lastGrayscale, nowGrayscale;
   cv::Mat diff, thresh;
 
-  //string const face_xml = "face.xml";
-  string const face_xml = "./haarcascade_frontalface_default.xml";
+  string const face_xml = "face.xml";
+  //string const face_xml = "./haarcascade_frontalface_default.xml";
   cv::CascadeClassifier face_cascade;
   face_cascade.load(face_xml);
 
-  vector<cv::Mat> hats;
-  hats.push_back(cv::imread("sombrero.png", CV_LOAD_IMAGE_UNCHANGED));
+  vector<AlphaImage> hats;
+  hats.emplace_back("sombrero.png");
 
   while (!exit) {
     // take new image
@@ -65,17 +92,10 @@ void capture_loop(cv::VideoCapture &camera)
     vector<cv::Rect> faces = run_facerecognition(image, face_cascade);
 
     for (Rect face : faces) {
-      cv::Mat hat = hats[0];
-      //scale hat
-      double ratio = hat.cols / hat.rows;
-      cv::resize(hat, hat, Size(face.width * 2, face.width * 2 / ratio), 1.0, 1.0, INTER_CUBIC);
+      AlphaImage *hat = &hats[0];
 
-      if (   (face.y - hat.rows) > 0
-          && (face.x - hat.cols) > 0) {
-        insert_alpha_image(image, cv::Rect(face.x - hat.cols/4, face.y - hat.rows, hat.cols, hat.rows), hat);
-      }
-
-      //hat.copyTo(result(cv::Rect(face.x, face.y, hat.cols, hat.rows)));
+      hat->write_to_image(image, face.width * 2, 
+                          face.x - face.width/4, face.y - hat->height(face.width));
     }
 
     cv::imshow("Live Feed", image);
