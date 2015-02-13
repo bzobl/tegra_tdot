@@ -119,6 +119,8 @@ void capture_loop(cv::VideoCapture &camera)
     return;
   }
 
+  std::cout << "all loaded" << std::endl;
+
   vector<AlphaImage> hats;
   hats.emplace_back("sombrero.png");
 
