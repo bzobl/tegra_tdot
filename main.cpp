@@ -111,6 +111,7 @@ void capture_loop(cv::VideoCapture &camera)
   cv::CascadeClassifier face_cascade;
   cv::gpu::CascadeClassifier_GPU face_cascade_gpu;
   face_cascade.load(face_xml);
+  face_cascade_gpu.load(face_xml);
 
   vector<AlphaImage> hats;
   hats.emplace_back("sombrero.png");
