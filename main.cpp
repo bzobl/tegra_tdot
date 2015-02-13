@@ -92,10 +92,6 @@ vector<cv::Rect> run_facerecognition_gpu(cv::Mat &live_image, cv::gpu::CascadeCl
     faces.push_back(prect[i]);
   }
 
-  for (Rect face : faces) {
-    rectangle(live_image, Point(face.x, face.y), Point(face.x+face.width, face.y+face.height),
-              Scalar(255, 255, 255), 1, 4);
-  }
   return faces;
 }
 
@@ -106,8 +102,8 @@ void capture_loop(cv::VideoCapture &camera)
   cv::Mat lastGrayscale, nowGrayscale;
   cv::Mat diff, thresh;
 
-  string const face_xml = "./face.xml";
-  //string const face_xml = "./haarcascade_frontalface_default.xml";
+  //string const face_xml = "./face.xml";
+  string const face_xml = "../opencv/data/haarcascades/haarcascade_frontalface_alt.xml";
   cv::CascadeClassifier face_cascade;
   cv::gpu::CascadeClassifier_GPU face_cascade_gpu;
   if (!face_cascade.load(face_xml)) {
@@ -118,6 +114,8 @@ void capture_loop(cv::VideoCapture &camera)
     cout << "GPU Could not load " << face_xml << std::endl;
     return;
   }
+
+  face_cascade_gpu.visualizeInPlace = true;
 
   std::cout << "all loaded" << std::endl;
 
