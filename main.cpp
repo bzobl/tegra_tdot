@@ -122,6 +122,8 @@ void capture_loop(cv::VideoCapture &camera)
   hats.emplace_back("sombrero.png");
 
   while (!exit) {
+    double t = (double) getTickCount();
+
     // take new image
     camera.read(image);
 
@@ -134,6 +136,13 @@ void capture_loop(cv::VideoCapture &camera)
       hat->write_to_image(image, face.width * 2, 
                           face.x - face.width/4, face.y - hat->height(face.width));
     }
+
+    t = (double) getTickCount() - t;
+    t /= getTickFrequency();
+    std::stringstream ss;
+    ss << "FPS: " << 1/t;
+
+    cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
 
     cv::imshow("Live Feed", image);
 
