@@ -110,8 +110,14 @@ void capture_loop(cv::VideoCapture &camera)
   //string const face_xml = "./haarcascade_frontalface_default.xml";
   cv::CascadeClassifier face_cascade;
   cv::gpu::CascadeClassifier_GPU face_cascade_gpu;
-  face_cascade.load(face_xml);
-  face_cascade_gpu.load(face_xml);
+  if (!face_cascade.load(face_xml)) {
+    cout << "Could not load " << face_xml << std::endl;
+    return;
+  }
+  if (!face_cascade_gpu.load(face_xml)) {
+    cout << "GPU Could not load " << face_xml << std::endl;
+    return;
+  }
 
   vector<AlphaImage> hats;
   hats.emplace_back("sombrero.png");
