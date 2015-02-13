@@ -73,7 +73,6 @@ vector<cv::Rect> run_facerecognition(cv::Mat &live_image, cv::CascadeClassifier 
 
 vector<cv::Rect> run_facerecognition_gpu(cv::Mat &live_image, cv::gpu::CascadeClassifier_GPU &cascade)
 {
-  cout << "starting recognition procedure" << endl;
   vector<cv::Rect> faces;
   cv::gpu::GpuMat d_faces;
   cv::Mat h_faces;
@@ -82,8 +81,8 @@ vector<cv::Rect> run_facerecognition_gpu(cv::Mat &live_image, cv::gpu::CascadeCl
   cv::cvtColor(live_image, gray, CV_BGR2GRAY);
   cv::gpu::GpuMat d_gray(gray);
 
-  cout << "calling cascade" << endl;
-  int n_detected = cascade.detectMultiScale(d_gray, d_faces, 1.2, 4, Size(20, 20));
+  int n_detected = cascade.detectMultiScale(d_gray, d_faces);
+                                           // 1.2, 4, Size(20, 20));
   
   d_faces.colRange(0, n_detected).download(h_faces);
   Rect *prect = h_faces.ptr<Rect>();
