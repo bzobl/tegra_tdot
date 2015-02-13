@@ -1,84 +1,45 @@
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
+#include <iostream>
+#include <vector>
 
-#include "movingObject.h"
+#include "opencv2/objdetect/objdetect.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/imgproc/imgproc.hpp"
 
 using namespace std;
+using namespace cv;
 
-void search_moving_objects(cv::Mat &threshold, cv::Mat &liveFeed)
+vector<cv::Rect> run_facerecognition(cv::Mat &live_image, cv::CascadeClassifier &cascade)
 {
-  int const max_objects = 50;
-  double const min_object_area = 20 * 20;
-  vector<vector<cv::Point>> contours;
-  vector<cv::Vec4i> hierarchy;
-  vector<MovingObject> objects;
+  vector<cv::Rect> faces;
 
-  cv::findContours(threshold, contours, hierarchy, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE);
+  cv::Mat gray;
+  cv::cvtColor(live_image, gray, CV_BGR2GRAY);
 
-  if ((contours.size() < max_objects) && !contours.empty()) {
+  //cascade.detectMultiScale(live_image, faces, 1.15, 3, CASCADE_SCALE_IMAGE, Size(30,30));
+  cascade.detectMultiScale(gray, faces);
 
-    // hierarchy vector gives the hierarchy of found contours. hierarchy[i][0] is the next contour
-    // in hierarchy
-    for (int i = 0; i >= 0; i = hierarchy[i][0]) {
-
-      cv::Moments moment = moments(contours[i]);
-      if (moment.m00 > min_object_area) {
-
-        MovingObject obj(contours[i]);
-
-        int len = objects.size();
-        for (int i = 0; i < len; i++) {
-          if (obj.inRange(objects[i])) {
-            obj.setColor(cv::Scalar(0, 255, 0));
-            objects.emplace_back(obj, objects[i]);
-          }
-        }
-
-        objects.emplace_back(std::move(obj));
-      }
-    }
-
-  } else if (contours.empty()) {
-    cv::putText(liveFeed, "no movement detected",
-                cv::Point(50, 50), 
-                0, 0.5, cv::Scalar(255, 255, 255));
-  } else {
-    cv::putText(liveFeed, "too much noise in video stream",
-                cv::Point(50, 50), 
-                0, 0.5, cv::Scalar(255, 255, 255));
+  for (Rect face : faces) {
+    rectangle(live_image, Point(face.x, face.y), Point(face.x+face.width, face.y+face.height),
+              Scalar(255, 255, 255), 1, 4);
   }
-
-  for_each(objects.begin(), objects.end(), [&liveFeed](MovingObject const &o)
-           {
-             o.draw(liveFeed);
-           });
-
+  return faces;
 }
 
-void on_trackbar( int, void* ) { }
-
-void refine_diff_image(cv::Mat const &diff, cv::Mat &threshold)
+void insert_alpha_image(cv::Mat &result, cv::Rect roi, cv::Mat image)
 {
-  cv::Mat thresh;
-  static int threshold_sensitivity = 20;
-  static int blur_size = 50;
-  static int threshold_sensitivity2 = 30;
- 
-  {
-    cv::namedWindow("refine_diff_image", 0);
-    cv::createTrackbar("Threshold sensitivity", "refine_diff_image", &threshold_sensitivity, 255, on_trackbar);
-    cv::createTrackbar("Blur size", "refine_diff_image", &blur_size, 255, on_trackbar);
-    cv::createTrackbar("Threshold sensitivity2", "refine_diff_image", &threshold_sensitivity2, 255, on_trackbar);
-  }
+  cv::Mat imageBGR(image.rows, image.cols, CV_8UC3);
+  cv::Mat imageALPHA(image.rows, image.cols, CV_8UC1);
+  Mat out[] = {imageBGR, imageALPHA};
+  int from_to[] = {0, 0, 1, 1, 2, 2, 3, 3};
 
-  cv::threshold(diff, thresh, threshold_sensitivity, 255, cv::THRESH_BINARY);
-  cv::blur(thresh, threshold, cv::Size(blur_size, blur_size));
-  cv::threshold(threshold, threshold, threshold_sensitivity2, 255, cv::THRESH_BINARY);
+  cv::mixChannels(&image, 1, out, 2, from_to, 4);
 
-  {
-    cv::imshow("Differential image", diff);
-    cv::imshow("Initial Threshold image", thresh);
-    cv::imshow("Final Threshold image", threshold);
+  for (int i = 0; i < roi.width; i++) {
+    for (int j = 0; j < roi.height; j++) {
+      if (imageALPHA.at<uchar>(j, i) > 0) {
+        result.at<Vec3b>(roi.y + j, roi.x + i) = imageBGR.at<Vec3b>(j, i);
+      }
+    }
   }
 }
 
@@ -89,23 +50,33 @@ void capture_loop(cv::VideoCapture &camera)
   cv::Mat lastGrayscale, nowGrayscale;
   cv::Mat diff, thresh;
 
-  // read first image, before entering loop
-  camera.read(image);
-  cv::cvtColor(image, nowGrayscale, cv::COLOR_BGR2GRAY);
+  //string const face_xml = "face.xml";
+  string const face_xml = "./haarcascade_frontalface_default.xml";
+  cv::CascadeClassifier face_cascade;
+  face_cascade.load(face_xml);
+
+  vector<cv::Mat> hats;
+  hats.push_back(cv::imread("sombrero.png", CV_LOAD_IMAGE_UNCHANGED));
 
   while (!exit) {
-    nowGrayscale.copyTo(lastGrayscale);
-
-    // take new image and convert to grayscale
+    // take new image
     camera.read(image);
-    cv::cvtColor(image, nowGrayscale, cv::COLOR_BGR2GRAY);
 
-    // difference between the two images, will filter static areas
-    cv::absdiff(lastGrayscale, nowGrayscale, diff);
+    vector<cv::Rect> faces = run_facerecognition(image, face_cascade);
 
-    refine_diff_image(diff, thresh);
+    for (Rect face : faces) {
+      cv::Mat hat = hats[0];
+      //scale hat
+      double ratio = hat.cols / hat.rows;
+      cv::resize(hat, hat, Size(face.width * 2, face.width * 2 / ratio), 1.0, 1.0, INTER_CUBIC);
 
-    search_moving_objects(thresh, image);
+      if (   (face.y - hat.rows) > 0
+          && (face.x - hat.cols) > 0) {
+        insert_alpha_image(image, cv::Rect(face.x - hat.cols/4, face.y - hat.rows, hat.cols, hat.rows), hat);
+      }
+
+      //hat.copyTo(result(cv::Rect(face.x, face.y, hat.cols, hat.rows)));
+    }
 
     cv::imshow("Live Feed", image);
 
