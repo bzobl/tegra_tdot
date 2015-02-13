@@ -81,6 +81,7 @@ vector<cv::Rect> run_facerecognition_gpu(cv::Mat &live_image, cv::gpu::CascadeCl
   cv::cvtColor(live_image, gray, CV_BGR2GRAY);
 
   cv::gpu::GpuMat d_gray(gray);
+  return faces;
 
   //cascade.detectMultiScale(live_image, faces, 1.15, 3, CASCADE_SCALE_IMAGE, Size(30,30));
   int n_detected = cascade.detectMultiScale(d_gray, d_faces, 1.2, 4, Size(20, 20));
