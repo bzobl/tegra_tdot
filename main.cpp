@@ -4,6 +4,7 @@
 #include "opencv2/objdetect/objdetect.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/gpu/gpu.hpp"
 
 using namespace std;
 using namespace cv;
@@ -70,6 +71,34 @@ vector<cv::Rect> run_facerecognition(cv::Mat &live_image, cv::CascadeClassifier 
   return faces;
 }
 
+vector<cv::Rect> run_facerecognition_gpu(cv::Mat &live_image, cv::gpu::CascadeClassifier_GPU &cascade)
+{
+  vector<cv::Rect> faces;
+  cv::gpu::GpuMat d_faces;
+  cv::Mat h_faces;
+
+  cv::Mat gray;
+  cv::cvtColor(live_image, gray, CV_BGR2GRAY);
+
+  cv::gpu::GpuMat d_gray(gray);
+
+  //cascade.detectMultiScale(live_image, faces, 1.15, 3, CASCADE_SCALE_IMAGE, Size(30,30));
+  int n_detected = cascade.detectMultiScale(d_gray, d_faces);
+  
+  d_faces.colRange(0, n_detected).download(h_faces);
+  Rect *prect = h_faces.ptr<Rect>();
+
+  for (int i = 0; i < n_detected; i++) {
+    faces.push_back(prect[i]);
+  }
+
+  for (Rect face : faces) {
+    rectangle(live_image, Point(face.x, face.y), Point(face.x+face.width, face.y+face.height),
+              Scalar(255, 255, 255), 1, 4);
+  }
+  return faces;
+}
+
 void capture_loop(cv::VideoCapture &camera)
 {
   bool exit = false;
@@ -80,6 +109,7 @@ void capture_loop(cv::VideoCapture &camera)
   string const face_xml = "face.xml";
   //string const face_xml = "./haarcascade_frontalface_default.xml";
   cv::CascadeClassifier face_cascade;
+  cv::gpu::CascadeClassifier_GPU face_cascade_gpu;
   face_cascade.load(face_xml);
 
   vector<AlphaImage> hats;
@@ -89,7 +119,8 @@ void capture_loop(cv::VideoCapture &camera)
     // take new image
     camera.read(image);
 
-    vector<cv::Rect> faces = run_facerecognition(image, face_cascade);
+    //vector<cv::Rect> faces = run_facerecognition(image, face_cascade);
+    vector<cv::Rect> faces = run_facerecognition_gpu(image, face_cascade_gpu);
 
     for (Rect face : faces) {
       AlphaImage *hat = &hats[0];
