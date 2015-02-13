@@ -135,7 +135,7 @@ void capture_loop(cv::VideoCapture &camera)
       AlphaImage *hat = &hats[0];
 
       hat->write_to_image(image, face.width * 2, 
-                          face.x - face.width, face.y - hat->height(face.width));
+                          face.x - face.width/2, face.y - hat->height(face.width));
     }
 
     t = ((double) getTickCount() - t) / getTickFrequency();
