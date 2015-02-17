@@ -12,7 +12,8 @@ INCLUDES = $(addprefix -I, $(C_INCL))
 C_LIB = opencv_core opencv_highgui opencv_video opencv_imgproc opencv_objdetect opencv_gpu
 LIBS = $(addprefix -l, $(C_LIB))
 
-CPP_SRC  = main.cpp
+CPP_SRC  = main.cpp      					\
+					 livestream.cpp
 
 CPP_H    = $(wildcard $(C_INCL)/*.h)
 

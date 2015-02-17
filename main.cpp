@@ -6,6 +6,8 @@
 #include "opencv2/imgproc/imgproc.hpp"
 #include "opencv2/gpu/gpu.hpp"
 
+#include "livestream.h"
+
 using namespace std;
 using namespace cv;
 
@@ -93,7 +95,7 @@ vector<cv::Rect> run_facerecognition_gpu(cv::Mat &live_image, cv::gpu::CascadeCl
   return faces;
 }
 
-void capture_loop(cv::VideoCapture &camera)
+void capture_loop(LiveStream &stream)
 {
   bool exit = false;
   cv::Mat image;
@@ -126,17 +128,21 @@ void capture_loop(cv::VideoCapture &camera)
     double t = (double) getTickCount();
 
     // take new image
-    camera.read(image);
+    stream.nextFrame(image);
 
     //vector<cv::Rect> faces = run_facerecognition(image, face_cascade);
     vector<cv::Rect> faces = run_facerecognition_gpu(image, face_cascade_gpu);
 
+    /*
     for (Rect face : faces) {
       AlphaImage *hat = &hats[0];
 
       hat->write_to_image(image, face.width * 2, 
                           face.x - face.width/2, face.y - hat->height(face.width));
     }
+    */
+
+    stream.applyOverlay(image);
 
     t = ((double) getTickCount() - t) / getTickFrequency();
     std::stringstream ss;
@@ -167,15 +173,14 @@ int main(int argc, char **argv)
     cam = atoi(argv[1]);
   }
 
-  cv::VideoCapture camera;
-  camera.open(cam);
-  if (!camera.isOpened()) {
+  
+  LiveStream live(cam);
+  if (!live.isOpened()) {
     cerr << "Error opening camera " << cam << endl;
     return -1;
   }
 
-  capture_loop(camera);
+  capture_loop(live);
 
-  camera.release();
   return 0;
 }
