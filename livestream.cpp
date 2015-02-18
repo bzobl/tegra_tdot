@@ -13,7 +13,9 @@ LiveStream::LiveStream(int camNum, int width, int height) : LiveStream(camNum, w
 
 LiveStream::LiveStream(int camNum, int width, int height, int mode)
 {
-  openCamera(camNum, width, height, mode);
+  if (!openCamera(camNum, width, height, mode)) {
+    return;
+  }
 
   mCamera.read(mCurrentFrame);
   mOverlay = cv::Mat::zeros(mStreamHeight, mStreamWidth, CV_8UC3);
@@ -38,9 +40,10 @@ bool LiveStream::openCamera(int num, int width, int height, int mode)
   }
 
   if ((width != -1) && (height != -1)) {
-    if (   !mCamera.set(CV_CAP_PROP_FRAME_WIDTH, width)
-        || !mCamera.set(CV_CAP_PROP_FRAME_HEIGHT, height)) {
+    if (   !mCamera.set(CV_CAP_PROP_FRAME_HEIGHT, height)
+        || !mCamera.set(CV_CAP_PROP_FRAME_WIDTH, width)) {
       std::cerr << "could not set resolution " << width << "x" << height << std::endl;
+      mCamera.release();
       return false;
     }
   }
@@ -48,6 +51,7 @@ bool LiveStream::openCamera(int num, int width, int height, int mode)
   if (mode != -1) {
     if (!mCamera.set(CV_CAP_PROP_MODE, mode)) {
       std::cerr << "could not set mode " << mode << std::endl;
+      mCamera.release();
       return false;
     }
   }
