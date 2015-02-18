@@ -13,6 +13,7 @@ C_LIB = opencv_core opencv_highgui opencv_video opencv_imgproc opencv_objdetect 
 LIBS = $(addprefix -l, $(C_LIB))
 
 CPP_SRC  = main.cpp      					\
+					 alpha-image.cpp				\
 					 livestream.cpp
 
 CPP_H    = $(wildcard $(C_INCL)/*.h)

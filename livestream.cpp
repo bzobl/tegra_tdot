@@ -29,11 +29,6 @@ LiveStream::~LiveStream()
   }
 }
 
-void LiveStream::resetOverlay()
-{
-  mOverlayAlpha = cv::Mat::zeros(mStreamHeight, mStreamWidth, CV_8UC1);
-}
-
 bool LiveStream::isOpened() const
 {
   return mCamera.isOpened();
@@ -48,6 +43,17 @@ void LiveStream::nextFrame(cv::Mat &frame)
 {
   mCamera.read(mCurrentFrame);
   mCurrentFrame.copyTo(frame);
+}
+
+void LiveStream::resetOverlay()
+{
+  mOverlayAlpha = cv::Mat::zeros(mStreamHeight, mStreamWidth, CV_8UC1);
+}
+
+void LiveStream::writeOverlayImage(AlphaImage const &image, int width, int x, int y)
+{
+  cv::Rect roi(x, y, width, image.height(width));
+  image.write_scaled(mOverlay, mOverlayAlpha, roi);
 }
 
 void LiveStream::applyOverlay(cv::Mat &image)

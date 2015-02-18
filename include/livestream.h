@@ -4,6 +4,8 @@
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 
+#include "alpha-image.h"
+
 class LiveStream {
 
 private:
@@ -27,6 +29,7 @@ public:
   void nextFrame(cv::Mat &frame);
 
   void resetOverlay();
+  void writeOverlayImage(AlphaImage const &image, int width, int x, int y);
   void applyOverlay(cv::Mat &image);
 };
 

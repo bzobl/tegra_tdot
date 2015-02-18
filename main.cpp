@@ -11,51 +11,6 @@
 using namespace std;
 using namespace cv;
 
-class AlphaImage {
-
-private:
-  cv::Mat color;
-  cv::Mat alpha;
-
-  double ratio;
-
-public:
-  AlphaImage(string filename)
-  {
-    cv::Mat image = cv::imread(filename, CV_LOAD_IMAGE_UNCHANGED);
-    color = cv::Mat(image.rows, image.cols, CV_8UC3);
-    alpha = cv::Mat(image.rows, image.cols, CV_8UC1);
-    Mat out[] = {color, alpha};
-    int from_to[] = {0, 0, 1, 1, 2, 2, 3, 3};
-    cv::mixChannels(&image, 1, out, 2, from_to, 4);
-
-    ratio = image.cols / image.rows;
-  }
-
-  int width() const { return color.cols; }
-  int height() const { return color.rows; }
-
-  int height(int width) const { return color.rows / ratio; }
-
-  void write_to_image(cv::Mat &image, int width, int x, int y)
-  {
-    //scale image
-    cv::Mat c, a;
-    cv::resize(color, c, Size(width, width / ratio), 1.0, 1.0, INTER_CUBIC);
-    cv::resize(alpha, a, Size(width, width / ratio), 1.0, 1.0, INTER_CUBIC);
-
-    for (int i = 0; i < c.cols; i++) {
-      for (int j = 0; j < c.rows; j++) {
-        if (a.at<uchar>(j, i) > 0) {
-          if (((y + j) > 0) && ((x + i) > 0)) {
-            image.at<Vec3b>(y + j, x + i) = c.at<Vec3b>(j, i);
-          }
-        }
-      }
-    }
-  }
-};
-
 vector<cv::Rect> run_facerecognition(cv::Mat &live_image, cv::CascadeClassifier &cascade)
 {
   vector<cv::Rect> faces;
@@ -95,6 +50,24 @@ vector<cv::Rect> run_facerecognition_gpu(cv::Mat &live_image, cv::gpu::CascadeCl
   return faces;
 }
 
+void facerecognition_thread(LiveStream &stream, cv::gpu::CascadeClassifier_GPU &cascade, AlphaImage &hat)
+{
+  cv::Mat frame;
+  stream.getFrame(frame);
+
+  stream.resetOverlay();
+  vector<cv::Rect> faces = run_facerecognition_gpu(frame, cascade);
+  for (Rect face : faces) {
+    /*
+    hat->write_to_image(image, face.width * 2, 
+                        face.x - face.width/2, face.y - hat->height(face.width));
+                        */
+    stream.writeOverlayImage(hat, face.width * 2,
+                             face.x - face.width/2, face.y - hat.height(face.width));
+
+  }
+}
+
 void capture_loop(LiveStream &stream)
 {
   bool exit = false;
@@ -130,17 +103,8 @@ void capture_loop(LiveStream &stream)
     // take new image
     stream.nextFrame(image);
 
-    //vector<cv::Rect> faces = run_facerecognition(image, face_cascade);
-    vector<cv::Rect> faces = run_facerecognition_gpu(image, face_cascade_gpu);
-
-    /*
-    for (Rect face : faces) {
-      AlphaImage *hat = &hats[0];
-
-      hat->write_to_image(image, face.width * 2, 
-                          face.x - face.width/2, face.y - hat->height(face.width));
-    }
-    */
+    // TODO move to separate thread
+    facerecognition_thread(stream, face_cascade_gpu, hats[0]);
 
     cout << "applying overlay" << endl;
     stream.applyOverlay(image);
@@ -149,7 +113,7 @@ void capture_loop(LiveStream &stream)
     std::stringstream ss;
     ss << "Time: " << t*1000 << "ms | FPS: " << 1/t;
 
-    cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(0, 0, 0));
+    cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
 
     cv::imshow("Live Feed", image);
 
