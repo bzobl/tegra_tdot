@@ -103,6 +103,11 @@ void capture_loop(LiveStream &stream)
                                std::ref(stream), std::ref(face_cascade_gpu),
                                std::ref(hats[0]), std::ref(exit));
 
+  const std::string live_feed_window = "Live Feed";
+  cv::namedWindow(live_feed_window, CV_WINDOW_NORMAL);
+  cv::setWindowProperty(live_feed_window, CV_WND_PROP_FULLSCREEN, CV_WND_PROP_FULLSCREEN);
+  cv::moveWindow(live_feed_window, 0, 0);
+
   while (!exit) {
     double t = (double) getTickCount();
 
@@ -120,7 +125,7 @@ void capture_loop(LiveStream &stream)
 
     cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
 
-    cv::imshow("Live Feed", image);
+    cv::imshow(live_feed_window, image);
 
     // check for button press for 10ms. necessary for opencv to refresh windows
     char key = cv::waitKey(10);
