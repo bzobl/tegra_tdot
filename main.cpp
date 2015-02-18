@@ -141,6 +141,8 @@ void capture_loop(LiveStream &stream)
         break;
     }
   }
+
+  detection_thread.join();
 }
 
 int main(int argc, char **argv)
