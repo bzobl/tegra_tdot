@@ -5,6 +5,7 @@
 #include "opencv2/highgui/highgui.hpp"
 
 #include "alpha-image.h"
+#include <mutex>
 
 class LiveStream {
 
@@ -13,10 +14,11 @@ private:
   int mStreamWidth = 0;
   int mStreamHeight = 0;
 
-
   cv::Mat mCurrentFrame;
   cv::Mat mOverlay;
   cv::Mat mOverlayAlpha;
+
+  std::mutex mMutex;
 
 public:
 

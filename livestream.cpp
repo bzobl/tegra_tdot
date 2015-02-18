@@ -36,22 +36,30 @@ bool LiveStream::isOpened() const
 
 void LiveStream::getFrame(cv::Mat &frame)
 {
+  std::unique_lock<std::mutex> l(mMutex);
+
   mCurrentFrame.copyTo(frame);
 }
 
 void LiveStream::nextFrame(cv::Mat &frame)
 {
+  std::unique_lock<std::mutex> l(mMutex);
+
   mCamera.read(mCurrentFrame);
   mCurrentFrame.copyTo(frame);
 }
 
 void LiveStream::resetOverlay()
 {
+  std::unique_lock<std::mutex> l(mMutex);
+
   mOverlayAlpha = cv::Mat::zeros(mStreamHeight, mStreamWidth, CV_8UC1);
 }
 
 void LiveStream::writeOverlayImage(AlphaImage const &image, int width, int x, int y)
 {
+  std::unique_lock<std::mutex> l(mMutex);
+
   if (   (x < 0) || (x >= mStreamWidth)
       || (y < 0) || (y >= mStreamHeight)
       || (width < 0) || (width > mStreamWidth)) {
@@ -68,6 +76,8 @@ void LiveStream::applyOverlay(cv::Mat &image)
 {
   assert(image.cols == mStreamWidth);
   assert(image.rows == mStreamHeight);
+
+  std::unique_lock<std::mutex> l(mMutex);
 
   for (int w = 0; w < mStreamWidth; w++) {
     for (int h = 0; h < mStreamHeight; h++) {

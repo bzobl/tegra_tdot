@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <thread>
 
 #include "opencv2/objdetect/objdetect.hpp"
 #include "opencv2/highgui/highgui.hpp"
@@ -50,21 +51,20 @@ vector<cv::Rect> run_facerecognition_gpu(cv::Mat &live_image, cv::gpu::CascadeCl
   return faces;
 }
 
-void facerecognition_thread(LiveStream &stream, cv::gpu::CascadeClassifier_GPU &cascade, AlphaImage &hat)
+void facerecognition_thread(LiveStream &stream, cv::gpu::CascadeClassifier_GPU &cascade,
+                            AlphaImage &hat, bool &exit)
 {
   cv::Mat frame;
-  stream.getFrame(frame);
 
-  stream.resetOverlay();
-  vector<cv::Rect> faces = run_facerecognition_gpu(frame, cascade);
-  for (Rect face : faces) {
-    /*
-    hat->write_to_image(image, face.width * 2, 
-                        face.x - face.width/2, face.y - hat->height(face.width));
-                        */
-    stream.writeOverlayImage(hat, face.width * 2,
-                             face.x - face.width/2, face.y - hat.height(face.width));
+  while (!exit) {
+    stream.getFrame(frame);
 
+    stream.resetOverlay();
+    vector<cv::Rect> faces = run_facerecognition_gpu(frame, cascade);
+    for (Rect face : faces) {
+      stream.writeOverlayImage(hat, face.width * 2,
+                               face.x - face.width/2, face.y - hat.height(face.width));
+    }
   }
 }
 
@@ -97,6 +97,10 @@ void capture_loop(LiveStream &stream)
   vector<AlphaImage> hats;
   hats.emplace_back("sombrero.png");
 
+  std::thread detection_thread(facerecognition_thread,
+                               std::ref(stream), std::ref(face_cascade_gpu),
+                               std::ref(hats[0]), std::ref(exit));
+
   while (!exit) {
     double t = (double) getTickCount();
 
@@ -104,7 +108,7 @@ void capture_loop(LiveStream &stream)
     stream.nextFrame(image);
 
     // TODO move to separate thread
-    facerecognition_thread(stream, face_cascade_gpu, hats[0]);
+    //facerecognition_thread(stream, face_cascade_gpu, hats[0]);
 
     cout << "applying overlay" << endl;
     stream.applyOverlay(image);

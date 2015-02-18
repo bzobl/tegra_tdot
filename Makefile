@@ -9,7 +9,7 @@ RM = rm -f
 
 C_INCL = ./include /usr/include
 INCLUDES = $(addprefix -I, $(C_INCL))
-C_LIB = opencv_core opencv_highgui opencv_video opencv_imgproc opencv_objdetect opencv_gpu
+C_LIB = opencv_core opencv_highgui opencv_video opencv_imgproc opencv_objdetect opencv_gpu pthread
 LIBS = $(addprefix -l, $(C_LIB))
 
 CPP_SRC  = main.cpp      					\
