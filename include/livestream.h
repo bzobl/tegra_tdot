@@ -18,7 +18,7 @@ private:
   cv::Mat mOverlay;
   cv::Mat mOverlayAlpha;
 
-  std::mutex mMutex;
+  mutable std::mutex mMutex;
 
 public:
 
@@ -30,6 +30,7 @@ public:
   void getFrame(cv::Mat &frame);
   void nextFrame(cv::Mat &frame);
 
+  std::mutex &getOverlayMutex();
   void resetOverlay();
   void writeOverlayImage(AlphaImage const &image, int width, int x, int y);
   void applyOverlay(cv::Mat &image);

@@ -49,17 +49,18 @@ void LiveStream::nextFrame(cv::Mat &frame)
   mCurrentFrame.copyTo(frame);
 }
 
+std::mutex &LiveStream::getOverlayMutex()
+{
+  return mMutex;
+}
+
 void LiveStream::resetOverlay()
 {
-  std::unique_lock<std::mutex> l(mMutex);
-
   mOverlayAlpha = cv::Mat::zeros(mStreamHeight, mStreamWidth, CV_8UC1);
 }
 
 void LiveStream::writeOverlayImage(AlphaImage const &image, int width, int x, int y)
 {
-  std::unique_lock<std::mutex> l(mMutex);
-
   if (   (x < 0) || (x >= mStreamWidth)
       || (y < 0) || (y >= mStreamHeight)
       || (width < 0) || (width > mStreamWidth)) {

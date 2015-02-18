@@ -59,8 +59,10 @@ void facerecognition_thread(LiveStream &stream, cv::gpu::CascadeClassifier_GPU &
   while (!exit) {
     stream.getFrame(frame);
 
-    stream.resetOverlay();
     vector<cv::Rect> faces = run_facerecognition_gpu(frame, cascade);
+
+    std::unique_lock<std::mutex> l(stream.getOverlayMutex());
+    stream.resetOverlay();
     for (Rect face : faces) {
       stream.writeOverlayImage(hat, face.width * 2,
                                face.x - face.width/2, face.y - hat.height(face.width));
@@ -110,7 +112,6 @@ void capture_loop(LiveStream &stream)
     // TODO move to separate thread
     //facerecognition_thread(stream, face_cascade_gpu, hats[0]);
 
-    cout << "applying overlay" << endl;
     stream.applyOverlay(image);
 
     t = ((double) getTickCount() - t) / getTickFrequency();
