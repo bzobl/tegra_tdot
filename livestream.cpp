@@ -12,7 +12,7 @@ LiveStream::LiveStream(int camNum)
   mStreamWidth = mCamera.get(CV_CAP_PROP_FRAME_WIDTH);
   mStreamHeight = mCamera.get(CV_CAP_PROP_FRAME_HEIGHT);
 
-  mCamera >> mCurrentFrame;
+  mCamera.read(mCurrentFrame);
   mOverlay = cv::Mat::zeros(mStreamHeight, mStreamWidth, CV_8UC3);
 }
 
