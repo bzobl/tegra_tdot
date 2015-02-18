@@ -20,9 +20,14 @@ private:
 
   mutable std::mutex mMutex;
 
+  bool openCamera(int num, int width, int height, int mode);
+
 public:
 
   LiveStream(int camNum);
+  LiveStream(int camNum, int width, int height);
+  LiveStream(int camNum, int width, int height, int mode);
+
   virtual ~LiveStream();
 
   bool isOpened() const;

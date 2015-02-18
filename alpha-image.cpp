@@ -37,6 +37,7 @@ void AlphaImage::write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI
   cv::resize(mColor, scaled_color, scaled_size, 1.0, 1.0, cv::INTER_CUBIC);
   cv::resize(mAlpha, scaled_alpha, scaled_size, 1.0, 1.0, cv::INTER_CUBIC);
 
+  //TODO check if in range of image
   scaled_color.copyTo(color(targetROI));
   scaled_alpha.copyTo(alpha(targetROI));
 }

@@ -1,25 +1,23 @@
 #include "livestream.h"
 
+#include <cassert>
 #include <iostream>
 
-LiveStream::LiveStream(int camNum)
+LiveStream::LiveStream(int camNum) : LiveStream(camNum, -1, -1)
 {
-  assert(camNum >= 0);
-  mCamera.open(camNum);
+}
 
-  if (!mCamera.isOpened()) {
-    std::cerr << "could not open camera" << std::endl;
-    return;
-  }
+LiveStream::LiveStream(int camNum, int width, int height) : LiveStream(camNum, width, height, -1)
+{
+}
 
-  mStreamWidth = mCamera.get(CV_CAP_PROP_FRAME_WIDTH);
-  mStreamHeight = mCamera.get(CV_CAP_PROP_FRAME_HEIGHT);
+LiveStream::LiveStream(int camNum, int width, int height, int mode)
+{
+  openCamera(camNum, width, height, mode);
 
   mCamera.read(mCurrentFrame);
   mOverlay = cv::Mat::zeros(mStreamHeight, mStreamWidth, CV_8UC3);
   resetOverlay();
-
-  std::cout << "initialized livestream with " << mStreamWidth << "x" << mStreamHeight << std::endl;
 }
 
 LiveStream::~LiveStream()
@@ -27,6 +25,42 @@ LiveStream::~LiveStream()
   if (mCamera.isOpened()) {
     mCamera.release();
   }
+}
+
+bool LiveStream::openCamera(int num, int width, int height, int mode)
+{
+  assert(num >= 0);
+  mCamera.open(num);
+
+  if (!mCamera.isOpened()) {
+    std::cerr << "could not open camera" << std::endl;
+    return false;
+  }
+
+  if ((width != -1) && (height != -1)) {
+    if (   !mCamera.set(CV_CAP_PROP_FRAME_WIDTH, width)
+        || !mCamera.set(CV_CAP_PROP_FRAME_HEIGHT, height)) {
+      std::cerr << "could not set resolution " << width << "x" << height << std::endl;
+      return false;
+    }
+  }
+
+  if (mode != -1) {
+    if (!mCamera.set(CV_CAP_PROP_MODE, mode)) {
+      std::cerr << "could not set mode " << mode << std::endl;
+      return false;
+    }
+  }
+
+  mStreamWidth = mCamera.get(CV_CAP_PROP_FRAME_WIDTH);
+  mStreamHeight = mCamera.get(CV_CAP_PROP_FRAME_HEIGHT);
+  int m = mCamera.get(CV_CAP_PROP_MODE);
+
+  std::cout << "initialized camera " << num << " with "
+            << mStreamWidth << "x" << mStreamHeight
+            << " Mode: " << m << std::endl;
+
+  return true;
 }
 
 bool LiveStream::isOpened() const
