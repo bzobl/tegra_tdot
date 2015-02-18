@@ -104,12 +104,12 @@ void capture_loop(LiveStream &stream)
                                std::ref(hats[0]), std::ref(exit));
 
   const std::string live_feed_window = "Live Feed";
-  cv::namedWindow(live_feed_window, CV_WINDOW_NORMAL);
   /*
+  cv::namedWindow(live_feed_window, CV_WINDOW_NORMAL);
   cv::setWindowProperty(live_feed_window, CV_WND_PROP_FULLSCREEN, CV_WND_PROP_FULLSCREEN);
   cv::moveWindow(live_feed_window, 0, 0);
-  */
   cv::resizeWindow(live_feed_window, 1920, 1080);
+  */
 
   while (!exit) {
     double t = (double) getTickCount();
