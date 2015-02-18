@@ -39,7 +39,6 @@ bool LiveStream::openCamera(int num, int width, int height, int mode)
     return false;
   }
 
-  /*
   if ((width != -1) && (height != -1)) {
     if (   !mCamera.set(CV_CAP_PROP_FRAME_HEIGHT, height)
         || !mCamera.set(CV_CAP_PROP_FRAME_WIDTH, width)) {
@@ -48,8 +47,6 @@ bool LiveStream::openCamera(int num, int width, int height, int mode)
       return false;
     }
   }
-  */
-  system("v4l2-ctl -d /dev/video0 -v width=1920,height=1080,pixelformat=2");
 
   if (mode != -1) {
     if (!mCamera.set(CV_CAP_PROP_MODE, mode)) {
