@@ -127,6 +127,8 @@ void capture_loop(LiveStream &stream)
   while (!exit) {
     double t = (double) getTickCount();
 
+    cout << "Loading new image" << endl;
+
     // take new image
     stream.nextFrame(image);
 
