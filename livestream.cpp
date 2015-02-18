@@ -101,7 +101,7 @@ void LiveStream::writeOverlayImage(AlphaImage const &image, int width, int x, in
 {
   if (   (x < 0) || (x >= mStreamWidth)
       || (y < 0) || (y >= mStreamHeight)
-      || (width < 0) || (width > mStreamWidth)) {
+      || (y + width < 0) || (x + width > mStreamWidth)) {
     std::cerr << "impossible location for image on overlay: (" << x << "," << y
               << ") widht=" << width << std::endl;
     return;
