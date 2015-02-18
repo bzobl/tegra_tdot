@@ -40,7 +40,7 @@ void LiveStream::getFrame(cv::Mat &frame)
 
 void LiveStream::nextFrame(cv::Mat &frame)
 {
-  mCamera >> mCurrentFrame;
+  mCamera.read(mCurrentFrame);
   mCurrentFrame.copyTo(frame);
 }
 
