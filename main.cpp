@@ -127,8 +127,6 @@ void capture_loop(LiveStream &stream)
   while (!exit) {
     double t = (double) getTickCount();
 
-    cout << "Loading new image" << endl;
-
     // take new image
     stream.nextFrame(image);
 
@@ -144,6 +142,7 @@ void capture_loop(LiveStream &stream)
     }
     */
 
+    cout << "applying overlay" << endl;
     stream.applyOverlay(image);
 
     t = ((double) getTickCount() - t) / getTickFrequency();

@@ -1,11 +1,14 @@
 #include "livestream.h"
 
+#include <iostream>
+
 LiveStream::LiveStream(int camNum)
 {
   assert(camNum >= 0);
   mCamera.open(camNum);
 
   if (!mCamera.isOpened()) {
+    std::cerr << "could not open camera" << std::endl;
     return;
   }
 
@@ -14,6 +17,9 @@ LiveStream::LiveStream(int camNum)
 
   mCamera.read(mCurrentFrame);
   mOverlay = cv::Mat::zeros(mStreamHeight, mStreamWidth, CV_8UC3);
+  resetOverlay();
+
+  std::cout << "initialized livestream with " << mStreamWidth << "x" << mStreamHeight << std::endl;
 }
 
 LiveStream::~LiveStream()
@@ -46,6 +52,9 @@ void LiveStream::nextFrame(cv::Mat &frame)
 
 void LiveStream::applyOverlay(cv::Mat &image)
 {
+  assert(image.cols == mStreamWidth);
+  assert(image.rows == mStreamHeight);
+
   for (int w = 0; w < mStreamWidth; w++) {
     for (int h = 0; h < mStreamHeight; h++) {
       if (mOverlayAlpha.at<uchar>(h, w) > 0) {
