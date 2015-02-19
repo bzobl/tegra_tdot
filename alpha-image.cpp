@@ -89,8 +89,7 @@ void AlphaImage::write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI
 
   std::cerr << "image ROI" << std::endl;
   scaled_color(roi);
-  /*
+
   scaled_color(roi).copyTo(color(targetROI));
   scaled_alpha(roi).copyTo(alpha(targetROI));
-  */
 }
