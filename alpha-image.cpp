@@ -56,6 +56,10 @@ void AlphaImage::write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI
     roi.width -= (targetROI.y + targetROI.height) - color.rows;
   }
 
-  scaled_color(roi).copyTo(color(targetROI));
-  scaled_alpha(roi).copyTo(alpha(targetROI));
+  imshow("Original Color", mColor);
+  imshow("Scaled Color", scaled_color);
+  imshow("ROI Color", scaled_color(roi));
+
+  //scaled_color(roi).copyTo(color(targetROI));
+  //scaled_alpha(roi).copyTo(alpha(targetROI));
 }
