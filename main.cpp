@@ -72,8 +72,13 @@ void facerecognition_thread(LiveStream &stream, std::string const & cascade_face
       std::unique_lock<std::mutex> l(stream.getOverlayMutex());
       stream.resetOverlay();
       for (Rect face : faces) {
-        stream.addImageToOverlay(hat, face.width * 2,
-                                 face.x - face.width/2, face.y - hat.height(face.width));
+        int width = face.width * 2;
+        int height = hat.height(width);
+        int x = face.x - width/4;
+        int y = face.y - height;
+        std::cout << "adding new image [" << width << "x" << height
+                  << "] at (" << x << "," << y << ")" << std::endl;
+        stream.addImageToOverlay(hat, width, x, y);
       }
     }
   }
