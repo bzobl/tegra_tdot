@@ -36,25 +36,31 @@ void AlphaImage::write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI
   cv::Size scaled_size(targetROI.width, targetROI.height);
   cv::Rect roi(cv::Point(0, 0), scaled_size);
 
+  std::cout << "New image to overlay on: " << targetROI << std::endl;
+
   //scale image
   cv::resize(mColor, scaled_color, scaled_size, 1.0, 1.0, cv::INTER_CUBIC);
   cv::resize(mAlpha, scaled_alpha, scaled_size, 1.0, 1.0, cv::INTER_CUBIC);
 
   if (targetROI.x < 0) {
     // cut image left
+    std::cout << "cut image left" << std::endl;
     roi.x += std::abs(targetROI.x);
     roi.width -= std::abs(targetROI.x);
   }
   if ((targetROI.x + targetROI.width) >= color.cols) {
     // cut image right
+    std::cout << "cut image right" << std::endl;
     roi.width -= (targetROI.x + targetROI.width) - color.cols;
   }
   if (targetROI.y < 0) {
     // cut image top
+    std::cout << "cut image top" << std::endl;
     roi.y += std::abs(targetROI.y);
     roi.width -= std::abs(targetROI.y);
   }
   if ((targetROI.y + targetROI.height) >= color.rows) {
+    std::cout << "cut image bottom" << std::endl;
     roi.width -= (targetROI.y + targetROI.height) - color.rows;
   }
 
