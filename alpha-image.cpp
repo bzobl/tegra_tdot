@@ -47,19 +47,28 @@ void AlphaImage::write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI
     std::cout << "cut image left" << std::endl;
     roi.x += std::abs(targetROI.x);
     roi.width -= std::abs(targetROI.x);
+    targetROI.x = 0;
   }
-  if ((targetROI.x + targetROI.width) >= color.cols) {
+  if (targetROI.x >= color.cols) {
+    std::cout << "target roi is not in image: " << targetROI << std::endl;
+    return;
+  } else if ((targetROI.x + targetROI.width) >= color.cols) {
     // cut image right
     std::cout << "cut image right" << std::endl;
     roi.width -= (targetROI.x + targetROI.width) - color.cols;
   }
+
   if (targetROI.y < 0) {
     // cut image top
     std::cout << "cut image top" << std::endl;
     roi.y += std::abs(targetROI.y);
     roi.width -= std::abs(targetROI.y);
+    targetROI.y = 0;
   }
-  if ((targetROI.y + targetROI.height) >= color.rows) {
+  if (targetROI.y >= color.rows) {
+    std::cout << "target roi is not in image: " << targetROI << std::endl;
+    return;
+  } else if ((targetROI.y + targetROI.height) >= color.rows) {
     std::cout << "cut image bottom" << std::endl;
     roi.width -= (targetROI.y + targetROI.height) - color.rows;
   }
