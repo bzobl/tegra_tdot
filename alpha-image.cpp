@@ -55,14 +55,16 @@ void AlphaImage::write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI
   } else if ((targetROI.x + targetROI.width) >= color.cols) {
     // cut image right
     std::cout << "cut image right" << std::endl;
-    roi.width -= (targetROI.x + targetROI.width) - color.cols;
+    int overlap = (targetROI.x + targetROI.width) - color.cols;
+    roi.width -= overlap;
+    targetROI.width -= overlap;
   }
 
   if (targetROI.y < 0) {
     // cut image top
     std::cout << "cut image top" << std::endl;
     roi.y += std::abs(targetROI.y);
-    roi.width -= std::abs(targetROI.y);
+    roi.height -= std::abs(targetROI.y);
     targetROI.y = 0;
   }
   if (targetROI.y >= color.rows) {
@@ -70,7 +72,9 @@ void AlphaImage::write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI
     return;
   } else if ((targetROI.y + targetROI.height) >= color.rows) {
     std::cout << "cut image bottom" << std::endl;
-    roi.width -= (targetROI.y + targetROI.height) - color.rows;
+    int overlap = (targetROI.y + targetROI.height) - color.rows;
+    roi.height -= overlap;
+    targetROI.height -= overlap;
   }
 
   /*
