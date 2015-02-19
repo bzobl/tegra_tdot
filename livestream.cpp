@@ -99,14 +99,6 @@ void LiveStream::resetOverlay()
 
 void LiveStream::addImageToOverlay(AlphaImage const &image, int width, int x, int y)
 {
-  if (   (x < 0) || (x >= mStreamWidth)
-      || (y < 0) || (y >= mStreamHeight)
-      || (y + width < 0) || (x + width > mStreamWidth)) {
-    std::cerr << "impossible location for image on overlay: (" << x << "," << y
-              << ") widht=" << width << std::endl;
-    return;
-  }
-
   cv::Rect roi(x, y, width, image.height(width));
   image.write_scaled(mOverlay, mOverlayAlpha, roi);
 }

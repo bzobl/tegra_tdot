@@ -25,7 +25,7 @@ int AlphaImage::height() const
 
 int AlphaImage::height(int width) const
 {
-  return mColor.rows / mRatio;
+  return mColor.cols / mRatio;
 }
 
 void AlphaImage::write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI) const
@@ -56,7 +56,6 @@ void AlphaImage::write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI
     roi.width -= (targetROI.y + targetROI.height) - color.rows;
   }
 
-  //TODO check if in range of image
   scaled_color(roi).copyTo(color(targetROI));
   scaled_alpha(roi).copyTo(alpha(targetROI));
 }
