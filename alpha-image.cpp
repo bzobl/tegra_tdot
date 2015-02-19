@@ -13,10 +13,10 @@ AlphaImage::AlphaImage(std::string filename)
   int from_to[] = {0, 0, 1, 1, 2, 2, 3, 3};
   cv::mixChannels(&image, 1, out, 2, from_to, 4);
 
-  mRatio = image.cols / image.rows;
+  mRatio = (double)image.cols / (double)image.rows;
 
   std::cout << "loaded alphaimage '" << filename << "': " << image.cols << "x" << image.rows
-            << "pixels (ratio " << mRatio << std::endl;
+            << "pixels (ratio " << mRatio << ")" << std::endl;
 }
 
 int AlphaImage::width() const
