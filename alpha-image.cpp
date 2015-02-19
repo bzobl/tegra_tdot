@@ -47,6 +47,7 @@ void AlphaImage::write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI
     std::cout << "cut image left" << std::endl;
     roi.x += std::abs(targetROI.x);
     roi.width -= std::abs(targetROI.x);
+    targetROI.width -= std::abs(targetROI.x);
     targetROI.x = 0;
   }
   if (targetROI.x >= color.cols) {
@@ -65,6 +66,7 @@ void AlphaImage::write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI
     std::cout << "cut image top" << std::endl;
     roi.y += std::abs(targetROI.y);
     roi.height -= std::abs(targetROI.y);
+    targetROI.height -= std::abs(targetROI.y);
     targetROI.y = 0;
   }
   if (targetROI.y >= color.rows) {
