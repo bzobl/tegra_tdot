@@ -62,6 +62,8 @@ void facerecognition_thread(LiveStream &stream, std::string const & cascade_face
     return;
   }
 
+  std::cout << "cascade loaded" << std::endl;
+
   while (!exit) {
     stream.getFrame(frame);
 
@@ -76,8 +78,6 @@ void facerecognition_thread(LiveStream &stream, std::string const & cascade_face
         int height = hat.height(width);
         int x = face.x - width/4;
         int y = face.y - height;
-        std::cout << "adding new image [" << width << "x" << height
-                  << "] at (" << x << "," << y << ")" << std::endl;
         stream.addImageToOverlay(hat, width, x, y);
       }
     }
@@ -92,17 +92,7 @@ void capture_loop(LiveStream &stream)
   cv::Mat diff, thresh;
 
   //string const face_xml = "./face.xml";
-  string const face_xml = "../opencv/data/haarcascades/haarcascade_frontalface_alt.xml";
-
-  /*
-  cv::CascadeClassifier face_cascade;
-  if (!face_cascade.load(face_xml)) {
-    cout << "Could not load " << face_xml << std::endl;
-    return;
-  }
-  */
-
-  std::cout << "all loaded" << std::endl;
+  string const face_xml = "../opencv/data/haarcascades/haarcascade_frontalface_alt2.xml";
 
   vector<AlphaImage> hats;
   hats.emplace_back("sombrero.png");
@@ -157,9 +147,9 @@ int main(int argc, char **argv)
     cam = atoi(argv[1]);
   }
   
-  LiveStream live(cam);
+  //LiveStream live(cam);
   //LiveStream live(cam, 1920, 1080);
-  //LiveStream live(cam, 640, 480);
+  LiveStream live(cam, 1280, 720);
   if (!live.isOpened()) {
     cerr << "Error opening camera " << cam << endl;
     return -1;
