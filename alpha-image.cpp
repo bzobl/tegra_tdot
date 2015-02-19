@@ -64,11 +64,13 @@ void AlphaImage::write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI
     roi.width -= (targetROI.y + targetROI.height) - color.rows;
   }
 
+  /*
   if (roi.x < 0 || roi.y < 0
       || (roi.x + roi.width) >= scaled_color.cols || (roi.y + roi.height) >= scaled_color.rows) {
     std::cout << "cannot draw roi: " << roi << std::endl;
     return;
   }
+  */
   imshow("Original Color", mColor);
   imshow("Scaled Color", scaled_color);
   imshow("ROI Color", scaled_color(roi));
