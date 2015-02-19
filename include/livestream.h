@@ -18,7 +18,8 @@ private:
   cv::Mat mOverlay;
   cv::Mat mOverlayAlpha;
 
-  mutable std::mutex mMutex;
+  mutable std::mutex mFrameMutex;
+  mutable std::mutex mOverlayMutex;
 
   bool openCamera(int num, int width, int height, int mode);
 
@@ -37,7 +38,7 @@ public:
 
   std::mutex &getOverlayMutex();
   void resetOverlay();
-  void writeOverlayImage(AlphaImage const &image, int width, int x, int y);
+  void addImageToOverlay(AlphaImage const &image, int width, int x, int y);
   void applyOverlay(cv::Mat &image);
 };
 

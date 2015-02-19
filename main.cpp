@@ -51,21 +51,30 @@ vector<cv::Rect> run_facerecognition_gpu(cv::Mat &live_image, cv::gpu::CascadeCl
   return faces;
 }
 
-void facerecognition_thread(LiveStream &stream, cv::gpu::CascadeClassifier_GPU &cascade,
+void facerecognition_thread(LiveStream &stream, std::string const & cascade_face,
                             AlphaImage &hat, bool &exit)
 {
   cv::Mat frame;
+
+  cv::gpu::CascadeClassifier_GPU cascade(cascade_face);
+  if (cascade.empty()) {
+    cout << "GPU Could not load " << cascade_face << std::endl;
+    return;
+  }
 
   while (!exit) {
     stream.getFrame(frame);
 
     vector<cv::Rect> faces = run_facerecognition_gpu(frame, cascade);
 
-    std::unique_lock<std::mutex> l(stream.getOverlayMutex());
-    stream.resetOverlay();
-    for (Rect face : faces) {
-      stream.writeOverlayImage(hat, face.width * 2,
-                               face.x - face.width/2, face.y - hat.height(face.width));
+    // for the duration of resetting the overlay no other thread must use the overlay
+    {
+      std::unique_lock<std::mutex> l(stream.getOverlayMutex());
+      stream.resetOverlay();
+      for (Rect face : faces) {
+        stream.addImageToOverlay(hat, face.width * 2,
+                                 face.x - face.width/2, face.y - hat.height(face.width));
+      }
     }
   }
 }
@@ -88,19 +97,13 @@ void capture_loop(LiveStream &stream)
   }
   */
 
-  cv::gpu::CascadeClassifier_GPU face_cascade_gpu;
-  if (!face_cascade_gpu.load(face_xml)) {
-    cout << "GPU Could not load " << face_xml << std::endl;
-    return;
-  }
-
   std::cout << "all loaded" << std::endl;
 
   vector<AlphaImage> hats;
   hats.emplace_back("sombrero.png");
 
   std::thread detection_thread(facerecognition_thread,
-                               std::ref(stream), std::ref(face_cascade_gpu),
+                               std::ref(stream), face_xml,
                                std::ref(hats[0]), std::ref(exit));
 
   const std::string live_feed_window = "Live Feed";
@@ -116,9 +119,6 @@ void capture_loop(LiveStream &stream)
 
     // take new image
     stream.nextFrame(image);
-
-    // TODO move to separate thread
-    //facerecognition_thread(stream, face_cascade_gpu, hats[0]);
 
     stream.applyOverlay(image);
 
