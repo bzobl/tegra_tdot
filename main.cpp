@@ -91,8 +91,8 @@ void capture_loop(LiveStream &stream)
   cv::Mat lastGrayscale, nowGrayscale;
   cv::Mat diff, thresh;
 
-  //string const face_xml = "./face.xml";
-  string const face_xml = "../opencv/data/haarcascades/haarcascade_frontalface_alt2.xml";
+  string const face_xml = "./face.xml";
+  //string const face_xml = "../opencv/data/haarcascades/haarcascade_frontalface_alt2.xml";
 
   vector<AlphaImage> hats;
   hats.emplace_back("sombrero.png");
