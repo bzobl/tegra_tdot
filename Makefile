@@ -9,7 +9,15 @@ RM = rm -f
 
 C_INCL = ./include /usr/include
 INCLUDES = $(addprefix -I, $(C_INCL))
-C_LIB = opencv_core opencv_highgui opencv_video opencv_imgproc opencv_objdetect opencv_gpu pthread
+C_LIB = opencv_core opencv_highgui opencv_video opencv_imgproc opencv_imgcodecs opencv_objdetect opencv_cuda opencv_cudaimgproc opencv_cudafeatures2d pthread \
+				opencv_cuda opencv_cudaimgproc opencv_cudaarithm opencv_cudacodec                         \
+				opencv_cudafeatures2d opencv_cudafilters opencv_cudaimgproc                               \
+				opencv_cudalegacy																																				  \
+				opencv_cudaoptflow opencv_cudastereo opencv_cudawarping                                   \
+				opencv_video opencv_calib3d opencv_features2d opencv_flann opencv_imgcodecs               \
+				opencv_ml opencv_photo opencv_shape opencv_stitching opencv_superres                      \
+				opencv_ts opencv_videoio opencv_videostab 
+
 LIBS = $(addprefix -l, $(C_LIB))
 
 CPP_SRC  = main.cpp      					\

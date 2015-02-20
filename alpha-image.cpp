@@ -6,7 +6,7 @@
 
 AlphaImage::AlphaImage(std::string filename)
 {
-  cv::Mat image = cv::imread(filename, CV_LOAD_IMAGE_UNCHANGED);
+  cv::Mat image = cv::imread(filename, cv::IMREAD_UNCHANGED);
   mColor = cv::Mat(image.rows, image.cols, CV_8UC3);
   mAlpha = cv::Mat(image.rows, image.cols, CV_8UC1);
   cv::Mat out[] = {mColor, mAlpha};

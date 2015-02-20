@@ -1,5 +1,7 @@
 #include "livestream.h"
 
+#include "opencv2/videoio.hpp"
+
 #include <cassert>
 #include <iostream>
 
@@ -28,6 +30,7 @@ LiveStream::~LiveStream()
     mCamera.release();
   }
 }
+#define FOURCC(c1, c2, c3, c4) (((c1) & 255) + (((c2) & 255) << 8) + (((c3) & 255) << 16) + (((c4) & 255) << 24))
 
 bool LiveStream::openCamera(int num, int width, int height, int mode)
 {
@@ -39,9 +42,19 @@ bool LiveStream::openCamera(int num, int width, int height, int mode)
     return false;
   }
 
+  if (!mCamera.set(cv::CAP_PROP_FOURCC, FOURCC('Y', 'U', 'Y', 'V')))
+  //if (!mCamera.set(cv::CAP_PROP_FOURCC, FOURCC('M', 'J', 'P', 'G')))
+  {
+    std::cerr << "could not set codec " << mode << std::endl;
+  }
+  if (   !mCamera.set(cv::CAP_PROP_FRAME_WIDTH, 1280)
+      || !mCamera.set(cv::CAP_PROP_FRAME_HEIGHT, 720)) {
+      std::cerr << "could not set resolution " << std::endl;
+  }
+
   if ((width != -1) && (height != -1)) {
-    if (   !mCamera.set(CV_CAP_PROP_FRAME_HEIGHT, height)
-        || !mCamera.set(CV_CAP_PROP_FRAME_WIDTH, width)) {
+    if (   !mCamera.set(cv::CAP_PROP_FRAME_HEIGHT, height)
+        || !mCamera.set(cv::CAP_PROP_FRAME_WIDTH, width)) {
       std::cerr << "could not set resolution " << width << "x" << height << std::endl;
       mCamera.release();
       return false;
@@ -49,20 +62,24 @@ bool LiveStream::openCamera(int num, int width, int height, int mode)
   }
 
   if (mode != -1) {
-    if (!mCamera.set(CV_CAP_PROP_MODE, mode)) {
+    if (!mCamera.set(cv::CAP_PROP_MODE, mode)) {
       std::cerr << "could not set mode " << mode << std::endl;
       mCamera.release();
       return false;
     }
   }
 
-  mStreamWidth = mCamera.get(CV_CAP_PROP_FRAME_WIDTH);
-  mStreamHeight = mCamera.get(CV_CAP_PROP_FRAME_HEIGHT);
-  int m = mCamera.get(CV_CAP_PROP_MODE);
+  mStreamWidth = mCamera.get(cv::CAP_PROP_FRAME_WIDTH);
+  mStreamHeight = mCamera.get(cv::CAP_PROP_FRAME_HEIGHT);
+  int m = mCamera.get(cv::CAP_PROP_MODE);
+  double codec_d = mCamera.get(cv::CAP_PROP_FOURCC);
+  char *codec = (char *)&codec_d;
+  codec[4] = 0;
 
   std::cout << "initialized camera " << num << " with "
             << mStreamWidth << "x" << mStreamHeight
-            << " Mode: " << m << std::endl;
+            << " Mode: " << m
+            << " Codec: " << codec << std::endl;
 
   return true;
 }

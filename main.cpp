@@ -2,10 +2,10 @@
 #include <vector>
 #include <thread>
 
-#include "opencv2/objdetect/objdetect.hpp"
-#include "opencv2/highgui/highgui.hpp"
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/gpu/gpu.hpp"
+#include "opencv2/objdetect.hpp"
+#include "opencv2/highgui.hpp"
+#include "opencv2/imgproc.hpp"
+#include "opencv2/cuda.hpp"
 
 #include "livestream.h"
 
@@ -17,7 +17,7 @@ vector<cv::Rect> run_facerecognition(cv::Mat &live_image, cv::CascadeClassifier 
   vector<cv::Rect> faces;
 
   cv::Mat gray;
-  cv::cvtColor(live_image, gray, CV_BGR2GRAY);
+  cv::cvtColor(live_image, gray, COLOR_BGR2GRAY);
 
   //cascade.detectMultiScale(live_image, faces, 1.15, 3, CASCADE_SCALE_IMAGE, Size(30,30));
   cascade.detectMultiScale(gray, faces);
@@ -29,15 +29,15 @@ vector<cv::Rect> run_facerecognition(cv::Mat &live_image, cv::CascadeClassifier 
   return faces;
 }
 
-vector<cv::Rect> run_facerecognition_gpu(cv::Mat &live_image, cv::gpu::CascadeClassifier_GPU &cascade)
+vector<cv::Rect> run_facerecognition_gpu(cv::Mat &live_image, cv::cuda::CascadeClassifier_CUDA &cascade)
 {
   vector<cv::Rect> faces;
-  cv::gpu::GpuMat d_faces;
+  cv::cuda::GpuMat d_faces;
   cv::Mat h_faces;
 
   cv::Mat gray;
-  cv::cvtColor(live_image, gray, CV_BGR2GRAY);
-  cv::gpu::GpuMat d_gray(gray);
+  cv::cvtColor(live_image, gray, COLOR_BGR2GRAY);
+  cv::cuda::GpuMat d_gray(gray);
 
   int n_detected = cascade.detectMultiScale(d_gray, d_faces, 1.2, 8, Size(40, 40));
   
@@ -56,7 +56,7 @@ void facerecognition_thread(LiveStream &stream, std::string const & cascade_face
 {
   cv::Mat frame;
 
-  cv::gpu::CascadeClassifier_GPU cascade(cascade_face);
+  cv::cuda::CascadeClassifier_CUDA cascade(cascade_face);
   if (cascade.empty()) {
     cout << "GPU Could not load " << cascade_face << std::endl;
     return;
@@ -147,9 +147,9 @@ int main(int argc, char **argv)
     cam = atoi(argv[1]);
   }
   
-  //LiveStream live(cam);
+  LiveStream live(cam);
   //LiveStream live(cam, 1920, 1080);
-  LiveStream live(cam, 1280, 720);
+  //LiveStream live(cam, 1280, 720);
   if (!live.isOpened()) {
     cerr << "Error opening camera " << cam << endl;
     return -1;
