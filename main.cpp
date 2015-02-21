@@ -35,7 +35,13 @@ cv::Mat visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy)
       if (l > 0) {
         //double spin_size = 5.0 * l/l_max;
         cv::Point p2(p.x + (int)dx, p.y + (int)dy);
-        cv::arrowedLine(arrows, p, p2, cv::Scalar(128, 128, 0));
+        cv::Scalar color;
+        if (p.y > p2.y) {
+          color = cv::Scalar(128, 128, 0);
+        } else {
+          color = cv::Scalar(0, 0, 255);
+        }
+        cv::arrowedLine(arrows, p, p2, color);
 
       }
     }
