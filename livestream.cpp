@@ -1,6 +1,7 @@
 #include "livestream.h"
 
 #include "opencv2/videoio.hpp"
+#include "opencv2/imgproc.hpp"
 
 #include <cassert>
 #include <iostream>
@@ -9,19 +10,15 @@ LiveStream::LiveStream(int camNum) : LiveStream(camNum, -1, -1)
 {
 }
 
-LiveStream::LiveStream(int camNum, int width, int height) : LiveStream(camNum, width, height, -1)
+LiveStream::LiveStream(int camNum, int width, int height)
 {
-}
-
-LiveStream::LiveStream(int camNum, int width, int height, int mode)
-{
-  if (!openCamera(camNum, width, height, mode)) {
+  if (!openCamera(camNum, width, height)) {
     return;
   }
 
-  mCamera.read(mCurrentFrame);
   mOverlay = cv::Mat::zeros(mStreamHeight, mStreamWidth, CV_8UC3);
   resetOverlay();
+  getCurrentFrame();
 }
 
 LiveStream::~LiveStream()
@@ -30,9 +27,10 @@ LiveStream::~LiveStream()
     mCamera.release();
   }
 }
+
 #define FOURCC(c1, c2, c3, c4) (((c1) & 255) + (((c2) & 255) << 8) + (((c3) & 255) << 16) + (((c4) & 255) << 24))
 
-bool LiveStream::openCamera(int num, int width, int height, int mode)
+bool LiveStream::openCamera(int num, int width, int height)
 {
   assert(num >= 0);
   mCamera.open(num);
@@ -42,46 +40,45 @@ bool LiveStream::openCamera(int num, int width, int height, int mode)
     return false;
   }
 
-  if (!mCamera.set(cv::CAP_PROP_FOURCC, FOURCC('Y', 'U', 'Y', 'V')))
+  double codec = FOURCC('Y', 'U', 'Y', 'V');
+  if (!mCamera.set(cv::CAP_PROP_FOURCC, codec))
   //if (!mCamera.set(cv::CAP_PROP_FOURCC, FOURCC('M', 'J', 'P', 'G')))
   {
-    std::cerr << "could not set codec " << mode << std::endl;
-  }
-  if (   !mCamera.set(cv::CAP_PROP_FRAME_WIDTH, 1280)
-      || !mCamera.set(cv::CAP_PROP_FRAME_HEIGHT, 720)) {
-      std::cerr << "could not set resolution " << std::endl;
+    char *fourcc = (char *) &codec;
+    std::cerr << "could not set codec " << fourcc[0] << fourcc[1] << fourcc[2] << fourcc[3] << std::endl;
   }
 
   if ((width != -1) && (height != -1)) {
-    if (   !mCamera.set(cv::CAP_PROP_FRAME_HEIGHT, height)
-        || !mCamera.set(cv::CAP_PROP_FRAME_WIDTH, width)) {
-      std::cerr << "could not set resolution " << width << "x" << height << std::endl;
-      mCamera.release();
-      return false;
-    }
-  }
-
-  if (mode != -1) {
-    if (!mCamera.set(cv::CAP_PROP_MODE, mode)) {
-      std::cerr << "could not set mode " << mode << std::endl;
-      mCamera.release();
-      return false;
-    }
+    // both calls will return false
+    mCamera.set(cv::CAP_PROP_FRAME_WIDTH, width);
+    mCamera.set(cv::CAP_PROP_FRAME_HEIGHT, height);
   }
 
   mStreamWidth = mCamera.get(cv::CAP_PROP_FRAME_WIDTH);
   mStreamHeight = mCamera.get(cv::CAP_PROP_FRAME_HEIGHT);
-  int m = mCamera.get(cv::CAP_PROP_MODE);
-  double codec_d = mCamera.get(cv::CAP_PROP_FOURCC);
-  char *codec = (char *)&codec_d;
-  codec[4] = 0;
+
+  if (   ((width != -1) && (mStreamWidth != width))
+      || ((height != -1) && (mStreamHeight != height))) {
+    std::cerr << "could not set resolution " << width << "x" << height << std::endl;
+    return false;
+  }
 
   std::cout << "initialized camera " << num << " with "
-            << mStreamWidth << "x" << mStreamHeight
-            << " Mode: " << m
-            << " Codec: " << codec << std::endl;
-
+            << mStreamWidth << "x" << mStreamHeight << std::endl;
   return true;
+}
+
+void LiveStream::getCurrentFrame()
+{
+  /*
+  cv::Mat yuv;
+  mCamera.read(yuv);
+  cv::cvtColor(yuv, mCurrentFrame, cv::COLOR_YUV2BGR);
+  */
+  cv::Mat jpg;
+  mCamera.read(jpg);
+  mCurrentFrame = cv::imdecode(jpg, 1);
+  //mCamera.read(mCurrentFrame);
 }
 
 bool LiveStream::isOpened() const
@@ -100,7 +97,7 @@ void LiveStream::nextFrame(cv::Mat &frame)
 {
   std::unique_lock<std::mutex> l(mFrameMutex);
 
-  mCamera.read(mCurrentFrame);
+  getCurrentFrame();
   mCurrentFrame.copyTo(frame);
 }
 

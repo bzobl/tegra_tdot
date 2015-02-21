@@ -21,13 +21,13 @@ private:
   mutable std::mutex mFrameMutex;
   mutable std::mutex mOverlayMutex;
 
-  bool openCamera(int num, int width, int height, int mode);
+  bool openCamera(int num, int width, int height);
+  void getCurrentFrame();
 
 public:
 
   LiveStream(int camNum);
   LiveStream(int camNum, int width, int height);
-  LiveStream(int camNum, int width, int height, int mode);
 
   virtual ~LiveStream();
 
