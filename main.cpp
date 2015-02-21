@@ -26,8 +26,8 @@ cv::Mat visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy)
 
   for (int y = 0; y < height; y += 10) {
     for (int x = 0; x < width; x += 10) {
-      double dx = flowx.at(y, x);
-      double dy = flowy.at(y, x);
+      double dx = flowx.at<float>(y, x);
+      double dy = flowy.at<float>(y, x);
 
       cv::Point p(x, y);
       double l = std::max(std::sqrt(dx*dx + dy*dy), l_max);
