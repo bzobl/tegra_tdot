@@ -26,16 +26,16 @@ cv::Mat visualize_optical_flow(cv::Mat flowx, cv::Mat flowy)
 
   for (int y = 0; y < height; y += 10) {
     for (int x = 0; x < width; x += 10) {
-      double dx = cvGetReal2D(flowx, y, x);
-      double dy = cvGetReal2D(flowy, y, x);
+      double dx = flowx.at(y, x);
+      double dy = flowy.at(y, x);
 
       cv::Point p(x, y);
       double l = std::max(std::sqrt(dx*dx + dy*dy), l_max);
 
       if (l > 0) {
-        double spin_size = 5.0 * l/l_max;
+        //double spin_size = 5.0 * l/l_max;
         cv::Point p2(p.x + (int)dx, p.y + (int)dy);
-        cv::arrowedLine(arrows, p, p2, cv::Scalar(128, 128, 0), 1, cv::CV_AA);
+        cv::arrowedLine(arrows, p, p2, cv::Scalar(128, 128, 0));
 
       }
     }
