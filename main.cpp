@@ -17,7 +17,7 @@ using namespace cv;
 
 using timepoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
 
-cv::Mat visualize_optical_flow(cv::Mat flowx, cv::Mat flowy)
+cv::Mat visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy)
 {
   int const width = flowx.cols;
   int const height = flowx.rows;
