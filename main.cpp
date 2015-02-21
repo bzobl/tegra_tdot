@@ -22,12 +22,30 @@ cv::Mat visualize_optical_flow(cv::Mat flowx, cv::Mat flowy)
   int const width = flowx.cols;
   int const height = flowx.rows;
   cv::Mat arrows = cv::Mat(height, width, CV_8UC3);
+  double l_max = 10;
+
+  for (int y = 0; y < height; y += 10) {
+    for (int x = 0; x < width; x += 10) {
+      double dx = cvGetReal2D(flowx, y, x);
+      double dy = cvGetReal2D(flowy, y, x);
+
+      cv::Point p(x, y);
+      double l = std::max(std::sqrt(dx*dx + dy*dy), l_max);
+
+      if (l > 0) {
+        double spin_size = 5.0 * l/l_max;
+        cv::Point p2(p.x + (int)dx, p.y + (int)dy);
+        cv::arrowedLine(arrows, p, p2, cv::Scalar(128, 128, 0), 1, CV_AA);
+
+      }
+    }
+  }
 
   return arrows;
 }
 
 cv::Mat optical_flow_farneback(cv::cuda::GpuMat *last, cv::cuda::GpuMat *now,
-                               timepoint &calc_start, timepoint &calc_stop, 
+                               timepoint &calc_start, timepoint &calc_stop,
                                timepoint &download_start, timepoint &download_stop)
 {
   cv::cuda::FarnebackOpticalFlow flow;
@@ -138,7 +156,7 @@ vector<cv::Rect> run_facerecognition_gpu(cv::Mat &live_image, cv::cuda::CascadeC
   cv::cuda::GpuMat d_gray(gray);
 
   int n_detected = cascade.detectMultiScale(d_gray, d_faces, 1.2, 8, Size(40, 40));
-  
+
   d_faces.colRange(0, n_detected).download(h_faces);
   Rect *prect = h_faces.ptr<Rect>();
 
@@ -199,6 +217,8 @@ void capture_loop(LiveStream &stream)
                                std::ref(stream), face_xml,
                                std::ref(hats[0]), std::ref(exit));
 
+  std::thread opt_flow_thread(optical_flow_thread, std::ref(stream), std::ref(exit));
+
   const std::string live_feed_window = "Live Feed";
   /*
   cv::namedWindow(live_feed_window, CV_WINDOW_NORMAL);
@@ -243,7 +263,7 @@ int main(int argc, char **argv)
   if (argc > 1) {
     cam = atoi(argv[1]);
   }
-  
+
   //LiveStream live(cam);
   //LiveStream live(cam, 1920, 1080);
   //LiveStream live(cam, 1280, 720);
