@@ -1,6 +1,6 @@
 PROJECT = tdot-demo
 
-CC = /usr/bin/g++-4.8
+CC = g++
 CFLAGS = -std=c++11
 # CFLAGS for all configuration. cannot be overwritten by environment
 override CFLAGS += -Wall -O3
@@ -14,7 +14,7 @@ C_LIB_DIRS = /opt/opencv3/lib				\
 						 /usr/local/cuda-6.0/lib
 LIB_DIRS = $(addprefix -L, $(C_LIB_DIRS))
 
-OPENCV_LIBS = core cuda highgui imgproc objdetect imgcodecs videoio
+OPENCV_LIBS = core cuda cudaoptflow highgui imgproc objdetect imgcodecs videoio
 C_LIB = $(addprefix opencv_, $(OPENCV_LIBS)) \
 				pthread
 

@@ -1,16 +1,114 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <chrono>
+#include <atomic>
 
 #include "opencv2/objdetect.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/cuda.hpp"
+#include "opencv2/cudaoptflow.hpp"
 
 #include "livestream.h"
 
 using namespace std;
 using namespace cv;
+
+using timepoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
+
+cv::Mat visualize_optical_flow(cv::Mat flowx, cv::Mat flowy)
+{
+  int const width = flowx.cols;
+  int const height = flowx.rows;
+  cv::Mat arrows = cv::Mat(height, width, CV_8UC3);
+
+  return arrows;
+}
+
+cv::Mat optical_flow_farneback(cv::cuda::GpuMat *last, cv::cuda::GpuMat *now,
+                               timepoint &calc_start, timepoint &calc_stop, 
+                               timepoint &download_start, timepoint &download_stop)
+{
+  cv::cuda::FarnebackOpticalFlow flow;
+
+  cv::cuda::GpuMat d_flowx, d_flowy;
+  cv::Mat flowxy, flowx, flowy, result;
+
+  calc_start = std::chrono::high_resolution_clock::now();
+  flow(*last, *now, d_flowx, d_flowy);
+  calc_stop = std::chrono::high_resolution_clock::now();
+
+  download_start = std::chrono::high_resolution_clock::now();
+  d_flowx.download(flowx);
+  d_flowy.download(flowy);
+  download_stop = std::chrono::high_resolution_clock::now();
+
+  return visualize_optical_flow(flowx, flowy);
+}
+
+void optical_flow_thread(LiveStream &stream, std::atomic<bool> &exit)
+{
+  timepoint upload_start, upload_stop,
+            calc_start, calc_stop,
+            download_start, download_stop,
+            total_start, total_stop;
+
+  cv::Mat image, grayscale, result;
+
+  cv::cuda::GpuMat gImg1, gImg2;
+  cv::cuda::GpuMat *nowGImg = &gImg1;
+  cv::cuda::GpuMat *lastGImg = &gImg2;
+
+  // read first image, before entering loop
+  stream.getFrame(image);
+  cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
+  nowGImg->upload(grayscale);
+
+  while (!exit) {
+    total_start = std::chrono::high_resolution_clock::now();
+
+    // swap pointers to avoid reallocating memory on gpu
+    ::swap(nowGImg, lastGImg);
+
+    // take new image and convert to grayscale
+    upload_start = std::chrono::high_resolution_clock::now();
+
+    stream.getFrame(image);
+    cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
+    nowGImg->upload(grayscale);
+
+    upload_stop = std::chrono::high_resolution_clock::now();
+
+    result = optical_flow_farneback(lastGImg, nowGImg, calc_start, calc_stop, download_start, download_stop);
+
+    total_stop = std::chrono::high_resolution_clock::now();
+    // print times
+    std::stringstream ss;
+    ss << "Times (in ms): "
+       << std::chrono::duration_cast<std::chrono::milliseconds>(upload_stop - upload_start).count()
+       << " | "
+       << std::chrono::duration_cast<std::chrono::milliseconds>(calc_stop - calc_start).count()
+       << " | "
+       << std::chrono::duration_cast<std::chrono::milliseconds>(download_stop - download_start).count()
+       << " | "
+       << std::chrono::duration_cast<std::chrono::milliseconds>(total_stop - total_start).count()
+       << std::endl;
+
+    cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
+    cv::imshow("OptFlow", result);
+
+    // check for button press for 10ms. necessary for opencv to refresh windows
+    char key = cv::waitKey(10);
+    switch (key) {
+      case 'q':
+        exit = true;
+        break;
+      default:
+        break;
+    }
+  }
+}
 
 vector<cv::Rect> run_facerecognition(cv::Mat &live_image, cv::CascadeClassifier &cascade)
 {
@@ -52,7 +150,7 @@ vector<cv::Rect> run_facerecognition_gpu(cv::Mat &live_image, cv::cuda::CascadeC
 }
 
 void facerecognition_thread(LiveStream &stream, std::string const & cascade_face,
-                            AlphaImage &hat, bool &exit)
+                            AlphaImage &hat, std::atomic<bool> &exit)
 {
   cv::Mat frame;
 
@@ -86,7 +184,7 @@ void facerecognition_thread(LiveStream &stream, std::string const & cascade_face
 
 void capture_loop(LiveStream &stream)
 {
-  bool exit = false;
+  std::atomic<bool> exit(false);
   cv::Mat image;
   cv::Mat lastGrayscale, nowGrayscale;
   cv::Mat diff, thresh;
@@ -131,7 +229,6 @@ void capture_loop(LiveStream &stream)
       case 'q':
         exit = true;
         break;
-      case -1:
       default:
         break;
     }
