@@ -92,7 +92,7 @@ void optical_flow_thread(LiveStream &stream, std::atomic<bool> &exit)
     // take new image and convert to grayscale
     upload_start = std::chrono::high_resolution_clock::now();
 
-    stream.getFrame(image);
+    stream.nextFrame(image);
     cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
     nowGImg->upload(grayscale);
 
@@ -213,11 +213,12 @@ void capture_loop(LiveStream &stream)
   vector<AlphaImage> hats;
   hats.emplace_back("sombrero.png");
 
+  std::thread opt_flow_thread(optical_flow_thread, std::ref(stream), std::ref(exit));
+  opt_flow_thread.join();
+
   std::thread detection_thread(facerecognition_thread,
                                std::ref(stream), face_xml,
                                std::ref(hats[0]), std::ref(exit));
-
-  std::thread opt_flow_thread(optical_flow_thread, std::ref(stream), std::ref(exit));
 
   const std::string live_feed_window = "Live Feed";
   /*
