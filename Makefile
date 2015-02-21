@@ -7,16 +7,16 @@ override CFLAGS += -Wall -O3
 
 RM = rm -f
 
-C_INCL = ./include /usr/include
+C_INCL = ./include /opt/opencv3/include
 INCLUDES = $(addprefix -I, $(C_INCL))
-C_LIB = opencv_core opencv_highgui opencv_video opencv_imgproc opencv_imgcodecs opencv_objdetect opencv_cuda opencv_cudaimgproc opencv_cudafeatures2d pthread \
-				opencv_cuda opencv_cudaimgproc opencv_cudaarithm opencv_cudacodec                         \
-				opencv_cudafeatures2d opencv_cudafilters opencv_cudaimgproc                               \
-				opencv_cudalegacy																																				  \
-				opencv_cudaoptflow opencv_cudastereo opencv_cudawarping                                   \
-				opencv_video opencv_calib3d opencv_features2d opencv_flann opencv_imgcodecs               \
-				opencv_ml opencv_photo opencv_shape opencv_stitching opencv_superres                      \
-				opencv_ts opencv_videoio opencv_videostab 
+
+C_LIB_DIRS = /opt/opencv3/lib				\
+						 /usr/local/cuda-6.0/lib
+LIB_DIRS = $(addprefix -L, $(C_LIB_DIRS))
+
+OPENCV_LIBS = core cuda highgui imgproc objdetect imgcodecs videoio
+C_LIB = $(addprefix opencv_, $(OPENCV_LIBS)) \
+				pthread
 
 LIBS = $(addprefix -l, $(C_LIB))
 
@@ -40,7 +40,7 @@ all: $(PROJECT)
 
 $(PROJECT): $(CPP_OBJS)
 	@echo 'Linking file: $@'
-	$(CC) -o $@ $(CFLAGS) $(INCLUDES) $(CPP_OBJS) $(LIBS)
+	$(CC) -o $@ $(CFLAGS) $(INCLUDES) $(LIB_DIRS) $(CPP_OBJS) $(LIBS)
 	@echo 'Finished building $@'
 	@echo ' '
 
