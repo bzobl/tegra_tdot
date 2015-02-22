@@ -3,6 +3,9 @@
 
 #include <atomic>
 
+#include "opencv2/cuda.hpp"
+#include "opencv2/cudaoptflow.hpp"
+
 #include "alpha-image.h"
 #include "livestream.h"
 
