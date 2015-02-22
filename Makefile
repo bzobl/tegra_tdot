@@ -24,6 +24,7 @@ CPP_SRC  = main.cpp      					\
 					 alpha-image.cpp				\
 					 augmented-reality.cpp 	\
 					 livestream.cpp   			\
+					 optical-flow.cpp 			\
 					 thread-safe-mat.cpp
 
 CPP_H    = $(wildcard $(C_INCL)/*.h)

@@ -11,8 +11,7 @@
 #include "opencv2/cudaoptflow.hpp"
 
 #include "augmented-reality.h"
-#include "livestream.h"
-#include "thread-safe-mat.h"
+#include "optical-flow.h"
 
 using namespace std;
 using namespace cv;
@@ -52,126 +51,6 @@ void usage(char const * const progname)
             << std::endl;
 }
 
-cv::Mat visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy)
-{
-  int const width = flowx.cols;
-  int const height = flowx.rows;
-  cv::Mat arrows = cv::Mat(height, width, CV_8UC3);
-  double l_max = 10;
-
-  for (int y = 0; y < height; y += 10) {
-    for (int x = 0; x < width; x += 10) {
-      double dx = flowx.at<float>(y, x);
-      double dy = flowy.at<float>(y, x);
-
-      cv::Point p(x, y);
-      double l = std::max(std::sqrt(dx*dx + dy*dy), l_max);
-
-      if (l > 0) {
-        //double spin_size = 5.0 * l/l_max;
-        cv::Point p2(p.x + (int)dx, p.y + (int)dy);
-        cv::Scalar color;
-        if (p.y > p2.y) {
-          color = cv::Scalar(128, 128, 0);
-        } else {
-          color = cv::Scalar(0, 0, 255);
-        }
-        cv::arrowedLine(arrows, p, p2, color);
-
-      }
-    }
-  }
-
-  return arrows;
-}
-
-cv::Mat optical_flow_farneback(cv::cuda::GpuMat *last, cv::cuda::GpuMat *now,
-                               timepoint &calc_start, timepoint &calc_stop,
-                               timepoint &download_start, timepoint &download_stop)
-{
-  cv::cuda::FarnebackOpticalFlow flow;
-
-  cv::cuda::GpuMat d_flowx, d_flowy;
-  cv::Mat flowxy, flowx, flowy, result;
-
-  calc_start = std::chrono::high_resolution_clock::now();
-  flow(*last, *now, d_flowx, d_flowy);
-  calc_stop = std::chrono::high_resolution_clock::now();
-
-  download_start = std::chrono::high_resolution_clock::now();
-  d_flowx.download(flowx);
-  d_flowy.download(flowy);
-  download_stop = std::chrono::high_resolution_clock::now();
-
-  return visualize_optical_flow(flowx, flowy);
-}
-
-void optical_flow_thread(LiveStream &stream, ThreadSafeMat &visualization, std::atomic<bool> &exit)
-{
-  timepoint upload_start, upload_stop,
-            calc_start, calc_stop,
-            download_start, download_stop,
-            total_start, total_stop;
-
-  cv::Mat image, grayscale, result;
-
-  cv::cuda::GpuMat gImg1, gImg2;
-  cv::cuda::GpuMat *nowGImg = &gImg1;
-  cv::cuda::GpuMat *lastGImg = &gImg2;
-
-  // read first image, before entering loop
-  stream.getFrame(image);
-  cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
-  nowGImg->upload(grayscale);
-
-  while (!exit) {
-    total_start = std::chrono::high_resolution_clock::now();
-
-    // swap pointers to avoid reallocating memory on gpu
-    ::swap(nowGImg, lastGImg);
-
-    // take new image and convert to grayscale
-    upload_start = std::chrono::high_resolution_clock::now();
-
-    stream.nextFrame(image);
-    cv::cvtColor(image, grayscale, cv::COLOR_BGR2GRAY);
-    nowGImg->upload(grayscale);
-
-    upload_stop = std::chrono::high_resolution_clock::now();
-
-    result = optical_flow_farneback(lastGImg, nowGImg, calc_start, calc_stop, download_start, download_stop);
-
-    total_stop = std::chrono::high_resolution_clock::now();
-    // print times
-    std::stringstream ss;
-    ss << "Times (in ms): "
-       << std::chrono::duration_cast<std::chrono::milliseconds>(upload_stop - upload_start).count()
-       << " | "
-       << std::chrono::duration_cast<std::chrono::milliseconds>(calc_stop - calc_start).count()
-       << " | "
-       << std::chrono::duration_cast<std::chrono::milliseconds>(download_stop - download_start).count()
-       << " | "
-       << std::chrono::duration_cast<std::chrono::milliseconds>(total_stop - total_start).count()
-       << std::endl;
-
-    cv::putText(result, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
-    //cv::imshow("OptFlow", result);
-    visualization.update(result);
-
-    // check for button press for 10ms. necessary for opencv to refresh windows
-    /*
-    char key = cv::waitKey(10);
-    switch (key) {
-      case 'q':
-        exit = true;
-        break;
-      default:
-        break;
-    }
-    */
-  }
-}
-
 void capture_loop(LiveStream &stream, Options const &opts)
 {
   std::atomic<bool> exit(false);
@@ -187,7 +66,8 @@ void capture_loop(LiveStream &stream, Options const &opts)
   ar.addHat("sombrero.png");
   std::cout << "AugmentedReality loaded" << std::endl;
 
-  ThreadSafeMat opt_flow(cv::Mat::zeros(stream.height(), stream.width(), CV_8UC3));
+  ThreadSafeMat of_visualize(cv::Mat::zeros(stream.height(), stream.width(), CV_8UC3));
+  OpticalFlow of(stream, of_visualize);
 
   std::vector<std::thread> workers;
 
@@ -199,8 +79,10 @@ void capture_loop(LiveStream &stream, Options const &opts)
   }
 
   if (opts.optical_flow) {
-    workers.emplace_back(optical_flow_thread,
-                         std::ref(stream), std::ref(opt_flow), std::ref(exit));
+    workers.emplace_back([&of, &exit]()
+                         {
+                          while(!exit) { of(); }
+                         });
   }
 
   const std::string live_feed_window = "Live Feed";
@@ -220,7 +102,7 @@ void capture_loop(LiveStream &stream, Options const &opts)
     stream.applyOverlay(image);
 
     if (opts.optical_flow) {
-      cv::imshow("OptFlow", opt_flow.get());
+      cv::imshow("OptFlow", of_visualize.get());
     }
 
     t = ((double) getTickCount() - t) / getTickFrequency();
