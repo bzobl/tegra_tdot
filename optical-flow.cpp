@@ -94,7 +94,7 @@ void OpticalFlow::operator()()
 
   std::stringstream ss;
   cv::Point pos(50, 50);
-  cv::fontFace font = cv::FONT_HERSHEY_PLAIN;
+  int font = cv::FONT_HERSHEY_PLAIN;
   cv::Scalar color(255, 255, 255);
   double scale = 0.5;
 
