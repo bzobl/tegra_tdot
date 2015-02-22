@@ -37,7 +37,7 @@ void usage(char const * const progname)
             << " -h, --height: Height of the captured image" << std::endl
             << " -f, --face-detect: Enable face detection and augmented reality" << std::endl
             << " -o, --optical-flow: Enable optical flow analysis" << std::endl
-            << " -h, --help: Show this help" << std::endl
+            << " --help: Show this help" << std::endl
             << std::endl;
 }
 
@@ -330,18 +330,21 @@ int check_options(Options &opts, int const argc, char const * const *argv)
     if (arg == "-w" || arg == "--width") {
       if ((i + 1) >= argc) {
         std::cerr << "missing value for " << arg << std::endl;
+        return -1;
       }
       opts.width = atoi(argv[i + 1]);
       i++;
     } else if (arg == "-h" || arg == "--height") {
       if ((i + 1) >= argc) {
         std::cerr << "missing value for " << arg << std::endl;
+        return -1;
       }
       opts.height = atoi(argv[i + 1]);
       i++;
     } else if (arg == "-c" || arg == "--camera") {
       if ((i + 1) >= argc) {
         std::cerr << "missing value for " << arg << std::endl;
+        return -1;
       }
       opts.cam_num = atoi(argv[i + 1]);
       i++;
@@ -349,7 +352,7 @@ int check_options(Options &opts, int const argc, char const * const *argv)
       opts.face_detect = true;
     } else if (arg == "-o" || arg == "--optical-flow") {
       opts.optical_flow = true;
-    } else if (arg == "-h" || arg == "--help") {
+    } else if (arg == "--help") {
       return -1;
     } else {
       std::cerr << "unknown option: " << arg << std::endl;
