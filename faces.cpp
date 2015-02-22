@@ -73,7 +73,7 @@ void Faces::tick()
                               }
                               return f.ttl <= 0;
                             });
-  std::erase(end, mFaces.end());
+  mFaces.erase(end, mFaces.end());
 }
 
 std::mutex &Faces::getMutex()
