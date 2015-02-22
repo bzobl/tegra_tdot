@@ -207,8 +207,7 @@ cv::Mat OpticalFlow::visualize_optical_flow_faces(cv::Mat const &flowx, cv::Mat 
   cv::Mat result = cv::Mat::zeros(flowx.rows, flowy.cols, CV_8UC3);;
   cv::Mat directions = cv::Mat::zeros(flowx.rows, flowy.cols, CV_8UC1);;
 
-  if (mFaces == nullptr)
-  {
+  if (mFaces == nullptr) {
     std::cerr << "faces not set" << std::endl;
     return result; 
   }
@@ -216,6 +215,9 @@ cv::Mat OpticalFlow::visualize_optical_flow_faces(cv::Mat const &flowx, cv::Mat 
   visualize_optical_flow(flowx, flowy,
                          [&directions](cv::Point const &p1, cv::Point const &p2, unsigned char direction)
                          {
+                          if (direction == DIRECTION_APPROACHING || diretion == DIRECTION_DISTANCING) {
+                            std::cout << "directions at " << p1.x << "/" <<  p1.y << std::endl;
+                          }
                           directions.at<uchar>(p1.y, p1.x) = direction;
                          });
 
@@ -251,13 +253,13 @@ cv::Mat OpticalFlow::visualize_optical_flow_faces(cv::Mat const &flowx, cv::Mat 
           color = cv::Scalar(0, 0, 255);
           break;
         default:
-          color = cv::Scalar(0, 0, 0);
+          color = cv::Scalar(255, 255, 255);
           break;
       }
 
-        cv::rectangle(result, face, color, cv::FILLED);
-      }
+      cv::rectangle(result, face, color, cv::FILLED);
     }
+  }
 
   return result;
 }
