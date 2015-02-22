@@ -1,6 +1,7 @@
 #include "faces.h"
 
 #include <algorithm>
+#include <iostream>
 
 #include "opencv2/imgproc.hpp"
 
@@ -27,6 +28,7 @@ void Faces::addFace(cv::Rect &face)
   }
 
   // no intersecting face found -> add new face
+  std::cout << "adding new face " << face << std::endl;
   FaceEntry f = { face, DEFAULT_TTL };
   mFaces.emplace_back(f);
 }
@@ -64,7 +66,13 @@ void Faces::tick()
   }
 
   std::remove_if(mFaces.begin(), mFaces.end(),
-                 [](FaceEntry const &f) { return f.ttl <= 0; });
+                 [](FaceEntry const &f)
+                 {
+                   if (f.ttl <= 0) {
+                    std::cout << "face " << f.face << "timed out ttl=" << f.ttl << std::endl;
+                   }
+                   return f.ttl <= 0;
+                 });
 }
 
 std::mutex &Faces::getMutex()
