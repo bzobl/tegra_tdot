@@ -168,9 +168,11 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
       cv::Scalar color;
       switch (block_direction) {
         case DIRECTION_APPROACHING:
+          std::cout << "block " << x << "/" << y << " APPROACHING" << std::endl;
           color = cv::Scalar(0, 255, 0);
           break;
         case DIRECTION_DISTANCING:
+          std::cout << "block " << x << "/" << y << " DISTANCING" << std::endl;
           color = cv::Scalar(0, 0, 255);
           break;
         default:
