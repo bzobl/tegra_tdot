@@ -132,10 +132,6 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
                                         : (mStream.height() - y * y_pixels_per_block);
 
       cv::Rect roi(x * x_pixels_per_block, y * y_pixels_per_block, width, height);
-      std::cout << "block " << x << "/" << y
-                << ": width " << width << ", height " << height
-                << ", start at " << roi.x << "/" << roi.y
-                << std::endl;
 
       cv::Mat block = directions(roi);
       int sum_approaching = std::count_if(block.begin<uchar>(),
@@ -144,21 +140,18 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
                                           {
                                             return v == DIRECTION_APPROACHING;
                                           });
-      std::cout << "approaching: " << sum_approaching << std::endl;
       int sum_distancing = std::count_if(block.begin<uchar>(),
                                          block.end<uchar>(),
                                          [](unsigned char v)
                                          {
                                            return v == DIRECTION_DISTANCING;
                                          });
-      std::cout << "distancing: " << sum_distancing << std::endl;
       int sum_undefined = std::count_if(block.begin<uchar>(),
                                         block.end<uchar>(),
                                         [](unsigned char v)
                                         {
                                           return (v != DIRECTION_APPROACHING) && (v != DIRECTION_DISTANCING);
                                         });
-      std::cout << "undefined: " << sum_undefined << std::endl;
 
       int block_direction;
       if (sum_approaching > sum_distancing) {
@@ -190,7 +183,7 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
           break;
       }
 
-      //cv::rectangle(result, roi, color, cv::FILLED);
+      cv::rectangle(result, roi, color, cv::FILLED);
     }
   }
 
