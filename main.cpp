@@ -335,7 +335,7 @@ int main(int argc, char **argv)
   //LiveStream live(cam, 1280, 720);
   LiveStream live(opts.cam_num, opts.width, opts.height);
   if (!live.isOpened()) {
-    cerr << "Error opening camera " << cam << endl;
+    cerr << "Error opening camera " << opts.cam_num << endl;
     return -1;
   }
 
