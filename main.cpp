@@ -1,3 +1,4 @@
+#include <condition_variable>
 #include <iostream>
 #include <vector>
 #include <thread>
@@ -105,6 +106,30 @@ int check_options(Options &opts, int const argc, char const * const *argv)
   return i;
 }
 
+class ConditionalWait {
+private:
+  std::mutex mMutex;
+  std::condition_variable mEvent;
+  bool mFlag;
+
+  std::atomic<bool> &mExit;
+
+public:
+  ConditionalWait(std::atomic<bool> &exit) : mExit(exit) { }
+  void toggle() { mFlag = !mFlag; };
+  operator bool() { return mFlag; }
+
+  void wait() {
+    if (mFlag) return;
+
+    std::unique_lock<std::mutex> l(mMutex);
+    mEvent.wait(l, [&](){return mExit || mFlag;});
+  }
+
+  void notify() {
+    mEvent.notify_all();
+  }
+};
 
 void capture_loop(LiveStream &stream, Options opts)
 {
@@ -140,14 +165,15 @@ void capture_loop(LiveStream &stream, Options opts)
   }
   std::cout << "OpticalFlow loaded" << std::endl;
 
+  ConditionalWait face_wait(exit);
   std::vector<std::thread> workers;
 
-  workers.emplace_back([&faces, &exit, &opts]()
+  workers.emplace_back([&faces, &exit, &face_wait]()
                        {
                         while(!exit) {
-                          if (opts.face_detect) {
-                            faces.detect();
-                          }
+                          face_wait.wait();
+                          faces.detect();
+                          std::cout << "detecting faces" << std::endl;
                         }
                        });
 
@@ -215,8 +241,8 @@ void capture_loop(LiveStream &stream, Options opts)
         std::cout << "OpticalFlow: " << (opts.optical_flow ? "enabled" : "disabled") << std::endl;
         break;
       case 'f':
-        opts.face_detect = !opts.face_detect;
-        std::cout << "FaceDetection: " << (opts.face_detect ? "enabled" : "disabled") << std::endl;
+        face_wait.toggle();
+        std::cout << "FaceDetection: " << (face_wait ? "enabled" : "disabled") << std::endl;
         break;
       case 'a':
         opts.augmented_reality = !opts.augmented_reality;
