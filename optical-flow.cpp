@@ -122,8 +122,6 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
   int const x_pixels_per_block = mStream.width() / n_xblocks;
   int const y_pixels_per_block = mStream.height() / n_yblocks;
 
-  std::cout << "checking blocks" << std::endl;
-
   for (int x = 0; x < n_xblocks; x++) {
     for (int y = 0; y < n_yblocks; y++) {
       int width = (x != n_xblocks - 1) ? x_pixels_per_block
@@ -132,6 +130,7 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
                                         : (mStream.height() - y * y_pixels_per_block);
 
       cv::Rect roi(x * x_pixels_per_block, y * y_pixels_per_block, width, height);
+      std::cout << "block " << roi << std::endl;
 
       cv::Mat block = directions(roi);
       int sum_approaching = std::count_if(block.begin<uchar>(),
@@ -184,6 +183,7 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
       }
 
       cv::rectangle(result, roi, color, cv::FILLED);
+      cv::rectangle(result, roi, cv::Scalar(255, 255, 255), 1);
     }
   }
 
