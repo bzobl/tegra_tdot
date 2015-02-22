@@ -59,7 +59,7 @@ cv::Mat OpticalFlow::visualize_optical_flow(cv::Mat const &flowx, cv::Mat const 
   int const width = flowx.cols;
   int const height = flowx.rows;
   double const l_threshold = 0.2;
-  cv::Mat result;
+  cv::Mat result(flowx.rows, flowy.cols, CV_8UC3);;
 
   for (int y = 0; y < height; y += 10) {
     for (int x = 0; x < width; x += 10) {
@@ -89,7 +89,7 @@ void OpticalFlow::operator()()
   assert(isReady());
 
   cv::Mat flowx, flowy;
-  cv::Mat result(mStream.height(), mStream.width(), CV_8UC3);
+  cv::Mat result;
 
   double ul_start = (double) cv::getTickCount();
   load_new_frame();
