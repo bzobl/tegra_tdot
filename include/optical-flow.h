@@ -41,11 +41,11 @@ public:
   void operator()();
 
   enum {
-    OPTICAL_FLOW_VISUALIZATION_BLOCKS,
-    OPTICAL_FLOW_VISUALIZATION_ARROWS,
+    OPTICAL_FLOW_VISUALIZATION_BLOCKS = 1,
+    OPTICAL_FLOW_VISUALIZATION_ARROWS = 2,
   } VisualizationType;
 
-  VisualizationType visualization_type = OPTICAL_FLOW_VISUALIZATION_ARROWS;
+  int visualization_type = OPTICAL_FLOW_VISUALIZATION_ARROWS;
 };
 
 #endif
