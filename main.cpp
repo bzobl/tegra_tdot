@@ -123,6 +123,7 @@ void optical_flow_thread(LiveStream &stream, std::atomic<bool> &exit)
     cv::imshow("OptFlow", result);
 
     // check for button press for 10ms. necessary for opencv to refresh windows
+    /*
     char key = cv::waitKey(10);
     switch (key) {
       case 'q':
@@ -131,6 +132,7 @@ void optical_flow_thread(LiveStream &stream, std::atomic<bool> &exit)
       default:
         break;
     }
+    */
   }
 }
 
@@ -220,7 +222,7 @@ void capture_loop(LiveStream &stream)
   hats.emplace_back("sombrero.png");
 
   std::thread opt_flow_thread(optical_flow_thread, std::ref(stream), std::ref(exit));
-  opt_flow_thread.join();
+  //opt_flow_thread.join();
 
   std::thread detection_thread(facerecognition_thread,
                                std::ref(stream), face_xml,
