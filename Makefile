@@ -22,6 +22,7 @@ LIBS = $(addprefix -l, $(C_LIB))
 
 CPP_SRC  = main.cpp      					\
 					 alpha-image.cpp				\
+					 augmented-reality.cpp 	\
 					 livestream.cpp   			\
 					 thread-safe-mat.cpp
 

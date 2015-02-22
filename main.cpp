@@ -10,6 +10,7 @@
 #include "opencv2/cuda.hpp"
 #include "opencv2/cudaoptflow.hpp"
 
+#include "augmented-reality.h"
 #include "livestream.h"
 #include "thread-safe-mat.h"
 
@@ -171,78 +172,6 @@ void optical_flow_thread(LiveStream &stream, ThreadSafeMat &visualization, std::
   }
 }
 
-vector<cv::Rect> run_facerecognition(cv::Mat &live_image, cv::CascadeClassifier &cascade)
-{
-  vector<cv::Rect> faces;
-
-  cv::Mat gray;
-  cv::cvtColor(live_image, gray, COLOR_BGR2GRAY);
-
-  //cascade.detectMultiScale(live_image, faces, 1.15, 3, CASCADE_SCALE_IMAGE, Size(30,30));
-  cascade.detectMultiScale(gray, faces);
-
-  for (Rect face : faces) {
-    rectangle(live_image, Point(face.x, face.y), Point(face.x+face.width, face.y+face.height),
-              Scalar(255, 255, 255), 1, 4);
-  }
-  return faces;
-}
-
-vector<cv::Rect> run_facerecognition_gpu(cv::Mat &live_image, cv::cuda::CascadeClassifier_CUDA &cascade)
-{
-  vector<cv::Rect> faces;
-  cv::cuda::GpuMat d_faces;
-  cv::Mat h_faces;
-
-  cv::Mat gray;
-  cv::cvtColor(live_image, gray, COLOR_BGR2GRAY);
-  cv::cuda::GpuMat d_gray(gray);
-
-  int n_detected = cascade.detectMultiScale(d_gray, d_faces, 1.2, 8, Size(40, 40));
-
-  d_faces.colRange(0, n_detected).download(h_faces);
-  Rect *prect = h_faces.ptr<Rect>();
-
-  for (int i = 0; i < n_detected; i++) {
-    faces.push_back(prect[i]);
-  }
-
-  return faces;
-}
-
-void facerecognition_thread(LiveStream &stream, std::string const & cascade_face,
-                            AlphaImage &hat, std::atomic<bool> &exit)
-{
-  cv::Mat frame;
-
-  cv::cuda::CascadeClassifier_CUDA cascade(cascade_face);
-  if (cascade.empty()) {
-    cout << "GPU Could not load " << cascade_face << std::endl;
-    return;
-  }
-
-  std::cout << "cascade loaded" << std::endl;
-
-  while (!exit) {
-    stream.getFrame(frame);
-
-    vector<cv::Rect> faces = run_facerecognition_gpu(frame, cascade);
-
-    // for the duration of resetting the overlay no other thread must use the overlay
-    {
-      std::unique_lock<std::mutex> l(stream.getOverlayMutex());
-      stream.resetOverlay();
-      for (Rect face : faces) {
-        int width = face.width * 2;
-        int height = hat.height(width);
-        int x = face.x - width/4;
-        int y = face.y - height;
-        stream.addImageToOverlay(hat, width, x, y);
-      }
-    }
-  }
-}
-
 void capture_loop(LiveStream &stream, Options const &opts)
 {
   std::atomic<bool> exit(false);
@@ -254,21 +183,24 @@ void capture_loop(LiveStream &stream, Options const &opts)
   //string const face_xml = "../opencv/data/haarcascades/haarcascade_frontalface_alt2.xml";
 
   vector<AlphaImage> hats;
-  hats.emplace_back("sombrero.png");
+  AugmentedReality ar(stream, face_xml);
+  ar.addHat("sombrero.png");
+  std::cout << "AugmentedReality loaded" << std::endl;
+
+  ThreadSafeMat opt_flow(cv::Mat::zeros(stream.height(), stream.width(), CV_8UC3));
 
   std::vector<std::thread> workers;
 
-  ThreadSafeMat opt_flow(cv::Mat::zeros(stream.height(), stream.width(), CV_8UC3));
+  if (opts.face_detect) {
+    workers.emplace_back([&ar, &exit]()
+                         {
+                          while(!exit) { ar(); }
+                         });
+  }
 
   if (opts.optical_flow) {
     workers.emplace_back(optical_flow_thread,
                          std::ref(stream), std::ref(opt_flow), std::ref(exit));
-  }
-
-  if (opts.face_detect) {
-    workers.emplace_back(facerecognition_thread,
-                         std::ref(stream), face_xml,
-                         std::ref(hats[0]), std::ref(exit));
   }
 
   const std::string live_feed_window = "Live Feed";
