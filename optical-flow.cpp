@@ -137,10 +137,50 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
                                           {
                                             return v == DIRECTION_APPROACHING;
                                           });
+      int sum_distancing = std::count_if(directions(roi).begin<uchar>(),
+                                         directions(roi).end<uchar>(),
+                                         [](unsigned char v)
+                                         {
+                                           return v == DIRECTION_DISTANCING;
+                                         });
+      int sum_undefined = std::count_if(directions(roi).begin<uchar>(),
+                                        directions(roi).end<uchar>(),
+                                        [](unsigned char v)
+                                        {
+                                          return (v != DIRECTION_APPROACHING) && (v != DIRECTION_DISTANCING);
+                                        });
 
+      int block_direction;
+      if (sum_approaching > sum_distancing) {
+        if (sum_undefined > sum_approaching) {
+          block_direction = DIRECTION_UNDEFINED;
+        } else {
+          block_direction = DIRECTION_APPROACHING;
+        }
+      } else {
+        if (sum_undefined > sum_distancing) {
+          block_direction = DIRECTION_UNDEFINED;
+        } else {
+          block_direction = DIRECTION_DISTANCING;
+        }
+      }
+
+      cv::Scalar color;
+      switch (block_direction) {
+        case DIRECTION_APPROACHING:
+          color = cv::Scalar(0, 255, 0);
+          break;
+        case DIRECTION_DISTANCING:
+          color = cv::Scalar(0, 0, 255);
+          break;
+        default:
+          color = cv::Scalar(255, 255, 255);
+          break;
+      }
+
+      cv::rectangle(result, roi, color, cv::CV_FILLED);
     }
   }
-
 
   return result;
 }
