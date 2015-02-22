@@ -11,6 +11,7 @@
 #include "opencv2/cudaoptflow.hpp"
 
 #include "augmented-reality.h"
+#include "faces.h"
 #include "optical-flow.h"
 
 using namespace std;
@@ -62,7 +63,8 @@ void capture_loop(LiveStream &stream, Options const &opts)
   //string const face_xml = "../opencv/data/haarcascades/haarcascade_frontalface_alt2.xml";
 
   vector<AlphaImage> hats;
-  AugmentedReality ar(stream, face_xml);
+  Faces faces;
+  AugmentedReality ar(stream, faces, face_xml);
   ar.addHat("sombrero.png");
   std::cout << "AugmentedReality loaded" << std::endl;
 

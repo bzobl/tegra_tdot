@@ -8,23 +8,21 @@
 #include "opencv2/cuda.hpp"
 
 #include "alpha-image.h"
+#include "faces.h"
 #include "livestream.h"
 
 class AugmentedReality {
 
 private:
-
   LiveStream &mStream;
+  Faces &mFaces;
 
   cv::cuda::CascadeClassifier_CUDA mFaceCascade;
-
   std::vector<AlphaImage> mHats;
-
-  std::vector<cv::Rect> detect_faces(cv::Mat &frame);
 
 public:
 
-  AugmentedReality(LiveStream &stream, std::string const &face_cascade);
+  AugmentedReality(LiveStream &stream, Faces &faces, std::string const &face_cascade);
 
   void addHat(std::string const &file);
 
