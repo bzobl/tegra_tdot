@@ -14,8 +14,7 @@ OpticalFlow::OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization)
 
   mFarneback.numLevels = 5;         // number of pyramid layers including initial
   mFarneback.pyrScale = 0.5;        // scale for pyramids. 0.5: next layer is twice smaller
-  mFarneback.fastPyramids = false;
-  mFarneback.winSize = 13;          // averaging window size
+  mFarneback.fastPyramids = false; mFarneback.winSize = 13;          // averaging window size
   mFarneback.numIters = 1;         // iterations per pyramid level
   mFarneback.polyN = 5;             // size of pixel neighborhood. usally 5 or 7
   mFarneback.polySigma = 1.1;       // standard deviation for gaussian usually 1.1 or 1.5
@@ -122,6 +121,8 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
   int const n_yblocks = 15;
   int const x_pixels_per_block = mStream.width() / n_xblocks;
   int const y_pixels_per_block = mStream.height() / n_yblocks;
+
+  std::cout << "checking blocks" << std::endl;
 
   for (int x = 0 ; x < n_xblocks; x++) {
     for (int y = 0 ; y < n_yblocks; y++) {
@@ -267,6 +268,7 @@ void OpticalFlow::operator()()
 
 void OpticalFlow::toggle_visualization()
 {
+  std::cout << "toggling visualization" << std::endl;
   if (mVisualization == OpticalFlow::OPTICAL_FLOW_VISUALIZATION_ARROWS) {
     mVisualization = OpticalFlow::OPTICAL_FLOW_VISUALIZATION_BLOCKS;
   } else {
