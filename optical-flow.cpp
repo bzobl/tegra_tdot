@@ -152,7 +152,7 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
                                         });
       std::cout << "block " << roi << "[" << sum_approaching
                                    << "|" << sum_distancing
-                                   << "|" sum_undefined
+                                   << "|" << sum_undefined
                                    << "]" << std::endl;
 
       int block_direction;
