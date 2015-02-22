@@ -15,8 +15,11 @@ void Faces::addFace(cv::Rect &face)
   for (auto &f : mFaces) {
     cv::Rect intersect = f.face & face;
     // found intersecting face -> update
+    /*
     if (   (intersect.width > 0) && (intersect.width < separate_threshold)
         && (intersect.height > 0) && (intersect.height < separate_threshold)) {
+    */
+    if (intersect.width > 0) {
       f.face = face;
       f.ttl = DEFAULT_TTL;
       return;
