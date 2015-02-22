@@ -74,15 +74,31 @@ cv::Mat OpticalFlow::visualize_optical_flow(cv::Mat const &flowx, cv::Mat const 
         cv::Point p2(x + dx, y + dy);
         cv::Scalar color;
         double diff = p.y - p2.y;
-        if (diff < (diff_threshold * -1)) {
-          // arrow pointing down --> approaching
-          color = cv::Scalar(0, 255, 0);
-        } else if (diff > diff_threshold) {
-          // arrow pointing up --> distancing
-          color = cv::Scalar(0, 0, 255);
+
+        if (x <= width/2) {
+        // lower half -> arrow pointing down when approaching
+          if (diff < (diff_threshold * -1)) {
+            // arrow pointing down --> approaching
+            color = cv::Scalar(0, 255, 0);
+          } else if (diff > diff_threshold) {
+            // arrow pointing up --> distancing
+            color = cv::Scalar(0, 0, 255);
+          } else {
+            color = cv::Scalar(255, 255, 255);
+          }
         } else {
-          color = cv::Scalar(255, 255, 255);
+        // upper half -> arrow ponting up when approaching
+          if (diff < (diff_threshold * -1)) {
+            // arrow pointing down --> distancing
+            color = cv::Scalar(0, 0, 255);
+          } else if (diff > diff_threshold) {
+            // arrow pointing up --> approaching
+            color = cv::Scalar(0, 255, 0);
+          } else {
+            color = cv::Scalar(255, 255, 255);
+          }
         }
+
         cv::arrowedLine(result, p, p2, color);
       }
     }
