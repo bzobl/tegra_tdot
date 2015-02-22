@@ -137,22 +137,23 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
                 << ", start at " << roi.x << "/" << roi.y
                 << std::endl;
 
-      int sum_approaching = std::count_if(directions(roi).begin<uchar>(),
-                                          directions(roi).end<uchar>(),
+      cv::Mat block = directions(roi);
+      int sum_approaching = std::count_if(block.begin<uchar>(),
+                                          block.end<uchar>(),
                                           [](unsigned char v)
                                           {
                                             return v == DIRECTION_APPROACHING;
                                           });
       std::cout << "approaching: " << sum_approaching << std::endl;
-      int sum_distancing = std::count_if(directions(roi).begin<uchar>(),
-                                         directions(roi).end<uchar>(),
+      int sum_distancing = std::count_if(block.begin<uchar>(),
+                                         block.end<uchar>(),
                                          [](unsigned char v)
                                          {
                                            return v == DIRECTION_DISTANCING;
                                          });
       std::cout << "distancing: " << sum_distancing << std::endl;
-      int sum_undefined = std::count_if(directions(roi).begin<uchar>(),
-                                        directions(roi).end<uchar>(),
+      int sum_undefined = std::count_if(block.begin<uchar>(),
+                                        block.end<uchar>(),
                                         [](unsigned char v)
                                         {
                                           return (v != DIRECTION_APPROACHING) && (v != DIRECTION_DISTANCING);
