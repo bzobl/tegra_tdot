@@ -19,7 +19,6 @@ void OpticalFlow::use_farneback(cv::Mat &flowx, cv::Mat &flowy,
                                 double &calc_time_ms, double &dl_time_ms)
 {
   cv::cuda::GpuMat d_flowx, d_flowy;
-  cv::Mat flowx, flowy;
 
   double calc_start = (double) cv::getTickCount();
   mFarneback(*mLastGpuImg, *mNowGpuImg, d_flowx, d_flowy);
