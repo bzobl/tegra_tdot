@@ -1,6 +1,6 @@
 #include "augmented-reality.h"
 
-AugmentedReality::AugmentedReality(LiveStream &stream, Faces &faces)
+AugmentedReality::AugmentedReality(LiveStream &stream, Faces *faces)
                                   : mStream(stream), mFaces(faces)
 {
 }
@@ -19,26 +19,20 @@ void AugmentedReality::operator()()
 {
   assert(ready());
 
-  cv::Mat frame;
-  mStream.getFrame(frame);
-  mFaces->detect(frame);
-
   // for the duration of resetting the overlay no other thread must use the overlay
-  {
-    std::unique_lock<std::mutex> sl(mStream.getOverlayMutex(), std::defer_lock);
-    std::unique_lock<std::mutex> fl(mFaces->getMutex(), std::defer_lock);
-    lock(sl, fl);
+  std::unique_lock<std::mutex> sl(mStream.getOverlayMutex(), std::defer_lock);
+  std::unique_lock<std::mutex> fl(mFaces->getMutex(), std::defer_lock);
+  lock(sl, fl);
 
-    mStream.resetOverlay();
+  mStream.resetOverlay();
 
-    for (cv::Rect face : mFaces->getFaces()) {
-      AlphaImage &hat(mHats[0]); 
+  for (cv::Rect face : mFaces->getFaces()) {
+    AlphaImage &hat(mHats[0]); 
 
-      int width = face.width * 2;
-      int height = hat.height(width);
-      int x = face.x - width/4;
-      int y = face.y - height;
-      mStream.addImageToOverlay(hat, width, x, y);
-    }
+    int width = face.width * 2;
+    int height = hat.height(width);
+    int x = face.x - width/4;
+    int y = face.y - height;
+    mStream.addImageToOverlay(hat, width, x, y);
   }
 }
