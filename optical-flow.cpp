@@ -8,8 +8,16 @@ OpticalFlow::OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization)
 {
   mNowGpuImg = &mGpuImg1;
   mLastGpuImg = &mGpuImg2;
-
   load_new_frame();
+
+  mFarneback.numLevels = 5;         // number of pyramid layers including initial
+  mFarneback.pyrScale = 0.5;        // scale for pyramids. 0.5: next layer is twice smaller
+  mFarneback.fastPyramids = true;
+  mFarneback.winSize = 13;          // averaging window size
+  mFarneback.numIters = 10;         // iterations per pyramid level
+  mFarneback.polyN = 5;             // size of pixel neighborhood. usally 5 or 7
+  mFarneback.polySigma = 1.1;       // standard deviation for gaussian usually 1.1 or 1.5
+  mFarneback.flags = 0;
 }
 
 bool OpticalFlow::isReady()
@@ -76,6 +84,7 @@ void OpticalFlow::visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &fl
 void OpticalFlow::operator()()
 {
   assert(isReady());
+
   cv::Mat flowx, flowy;
   cv::Mat result(mStream.height(), mStream.width(), CV_8UC3);
 
