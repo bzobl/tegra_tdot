@@ -18,6 +18,24 @@ using namespace cv;
 
 using timepoint = std::chrono::time_point<std::chrono::high_resolution_clock>;
 
+struct Options {
+  int cam_num = 0;
+  int width = 640;
+  int height = 480;
+  bool face_detect = false;
+  bool optical_flow = false;
+
+  std::ostream &operator<<(ostream &out)
+  {
+    out << "Camera:       " << cam_num << std::endl
+        << "Width:        " << width << std::endl
+        << "Height:       " << height << std::endl
+        << "Facedetect:   " << std::boolalpha << face_detect << std::endl
+        << "Optical Flow: " << std::boolalpha << optical_flow << std::endl;
+    return out;
+  }
+};
+
 cv::Mat visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy)
 {
   int const width = flowx.cols;
@@ -271,6 +289,39 @@ void capture_loop(LiveStream &stream)
   opt_flow_thread.join();
 }
 
+// returns processed arguments
+int check_options(Options &opts, int const argc, char const * const *argv)
+{
+  int i = 0;
+  argv++;
+  for (; i < argc; i++, argv++) {
+    std::string arg(*argv);
+
+    if (arg.find_first_of("-") == std::string::npos) {
+      break;
+    }
+
+    if (arg == "-w" || arg == "--width") {
+      argv++;
+      opts.width = atoi(*argv);
+    } else if (arg == "-h" || arg == "--height") {
+      argv++;
+      opts.height = atoi(*argv);
+    } else if (arg == "-c" || arg == "--camera") {
+      argv++;
+      opts.cam_num = atoi(*argv);
+    } else if (arg == "-f" || arg == "--face-detect") {
+      opts.face_detect = true;
+    } else if (arg == "-o" || arg == "--optical-flow") {
+      opts.optical_flow = true;
+    } else {
+      std::cerr << "unknown option: " << arg << std::endl;
+    }
+  }
+
+  return i;
+}
+
 int main(int argc, char **argv)
 {
   int cam = 0;
@@ -278,10 +329,15 @@ int main(int argc, char **argv)
     cam = atoi(argv[1]);
   }
 
+  Options opts;
+  argc -= check_options(opts, argc - 1, argv++);
+
+  std::cout << "Options: " << std::endl << opts;
+
   //LiveStream live(cam);
   //LiveStream live(cam, 1920, 1080);
   //LiveStream live(cam, 1280, 720);
-  LiveStream live(cam, 640, 480);
+  LiveStream live(cam, opts.width, opts.height);
   if (!live.isOpened()) {
     cerr << "Error opening camera " << cam << endl;
     return -1;
