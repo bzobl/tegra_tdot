@@ -359,16 +359,6 @@ void OpticalFlow::setFaces(Faces *faces)
 
 void OpticalFlow::toggle_visualization()
 {
-
   mVisualization = (VisualizationType)((mVisualization + 1) % OPTICAL_FLOW_VISUALIZATION_LAST_ENTRY);
-
   std::cout << "Optical Flow Visualization: " << mVisualizationNames[mVisualization] << std::endl;
-
-  if (mVisualization == OpticalFlow::OPTICAL_FLOW_VISUALIZATION_ARROWS) {
-    mVisualization = OpticalFlow::OPTICAL_FLOW_VISUALIZATION_BLOCKS;
-  } else if (mVisualization == OpticalFlow::OPTICAL_FLOW_VISUALIZATION_BLOCKS) {
-    mVisualization = OpticalFlow::OPTICAL_FLOW_VISUALIZATION_FACES;
-  } else {
-    mVisualization = OpticalFlow::OPTICAL_FLOW_VISUALIZATION_ARROWS;
-  };
 }
