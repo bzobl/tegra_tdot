@@ -117,8 +117,8 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
                           directions.at<uchar>(p1.y, p1.x) = direction;
                          });
 
-  int const n_xblocks = 40;
-  int const n_yblocks = 40;
+  int const n_xblocks = 5;
+  int const n_yblocks = 5;
   int const x_pixels_per_block = mStream.width() / n_xblocks;
   int const y_pixels_per_block = mStream.height() / n_yblocks;
 
@@ -157,17 +157,21 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
 
       int block_direction;
       if (sum_approaching > sum_distancing) {
+        /*
         if (sum_undefined > sum_approaching) {
           block_direction = DIRECTION_UNDEFINED;
         } else {
+        */
           block_direction = DIRECTION_APPROACHING;
-        }
+        //}
       } else {
+        /*
         if (sum_undefined > sum_distancing) {
           block_direction = DIRECTION_UNDEFINED;
         } else {
+        */
           block_direction = DIRECTION_DISTANCING;
-        }
+        //}
       }
 
       cv::Scalar color;
