@@ -5,7 +5,6 @@
 #include <cassert>
 
 #include "opencv2/core.hpp"
-#include "opencv2/cuda.hpp"
 
 #include "alpha-image.h"
 #include "faces.h"
@@ -17,12 +16,10 @@ private:
   LiveStream &mStream;
   Faces &mFaces;
 
-  cv::cuda::CascadeClassifier_CUDA mFaceCascade;
   std::vector<AlphaImage> mHats;
 
 public:
-
-  AugmentedReality(LiveStream &stream, Faces &faces, std::string const &face_cascade);
+  AugmentedReality(LiveStream &stream, Faces &faces);
 
   void addHat(std::string const &file);
 

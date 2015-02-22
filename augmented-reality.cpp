@@ -1,7 +1,7 @@
 #include "augmented-reality.h"
 
-AugmentedReality::AugmentedReality(LiveStream &stream, Faces &faces, std::string const &face_cascade)
-                                  : mStream(stream), mFaces(faces), mFaceCascade(face_cascade)
+AugmentedReality::AugmentedReality(LiveStream &stream, Faces &faces)
+                                  : mStream(stream), mFaces(faces)
 {
 }
 
@@ -12,7 +12,7 @@ void AugmentedReality::addHat(std::string const &file)
 
 bool AugmentedReality::ready()
 {
-  return mStream.isOpened() && !mFaceCascade.empty() && !mHats.empty();
+  return mStream.isOpened() && !mHats.empty();
 }
 
 void AugmentedReality::operator()()

@@ -2,22 +2,30 @@
 
 #include <algorithm>
 
+#include "opencv2/imgproc.hpp"
+
+Faces::Faces(std::string const &face_cascade) : mFaceCascade(face_cascade)
+{
+}
+
 void Faces::addFace(cv::Rect *face)
 {
   for (auto &f : mFaces) {
     // found intersecting face -> update
-    if ((f.face & face).width > 0) {
+    if ((f.face & *face).width > 0) {
       f.face = face;
       f.ttl = DEFAULT_TTL;
     }
   }
 
   // no intersecting face found -> add new face
-  mFaces.emplace_back(face, DEFAULT_TTL);
+  mFaces.emplace_back(*face, DEFAULT_TTL);
 }
 
-void Faces::detect(cv::Mat const &frame)
+bool Faces::detect(cv::Mat const &frame)
 {
+  if (mFaceCascade.empty()) return false;
+
   std::unique_lock<std::mutex> l(mMutex);
 
   std::vector<cv::Rect> faces;
@@ -36,6 +44,8 @@ void Faces::detect(cv::Mat const &frame)
   for (int i = 0; i < n_detected; i++) {
     addFace(prect[i]);
   }
+
+  return true;
 }
 
 void Faces::tick()

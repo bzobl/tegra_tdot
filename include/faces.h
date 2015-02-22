@@ -15,6 +15,8 @@ private:
     int ttl;
   };
 
+  cv::cuda::CascadeClassifier_CUDA mFaceCascade;
+
   std::mutex mMutex;
   std::vector<FaceEntry> mFaces;
 
@@ -23,7 +25,9 @@ private:
   void addFace(cv::Rect *face);
 
 public:
-  void detect(cv::Mat const &frame);
+  Faces(std::string const &face_cascade);
+
+  bool detect(cv::Mat const &frame);
 
   void tick();
 
