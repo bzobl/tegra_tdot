@@ -77,6 +77,12 @@ void AlphaImage::write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI
     targetROI.height -= overlap;
   }
 
-  scaled_color(roi).copyTo(color(targetROI));
-  scaled_alpha(roi).copyTo(alpha(targetROI));
+  for (int x = 0; x < targetROI.width; x++) {
+    for (int y = 0; y < targetROI.height; y++) {
+      if (scaled_alpha(roi).at<uchar>(y, x) != 0) {
+        alpha(targetROI).at<uchar>(y, x) = scaled_alpha(roi).at<uchar>(y, x);
+        color(targetROI).at<cv::Vec3b>(y, x) = scaled_color(roi).at<cv::Vec3b>(y, x);
+      }
+    }
+  }
 }
