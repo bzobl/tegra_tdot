@@ -69,6 +69,7 @@ void capture_loop(LiveStream &stream, Options const &opts)
 
   ThreadSafeMat of_visualize(cv::Mat::zeros(stream.height(), stream.width(), CV_8UC3));
   OpticalFlow of(stream, of_visualize);
+  of.setFaces(&faces);
   std::cout << "OpticalFlow loaded" << std::endl;
 
   std::vector<std::thread> workers;
