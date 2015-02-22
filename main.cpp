@@ -108,16 +108,20 @@ int check_options(Options &opts, int const argc, char const * const *argv)
 
 class ConditionalWait {
 private:
+  std::atomic<bool> &mExit;
+
   std::mutex mMutex;
   std::condition_variable mEvent;
   bool mFlag;
 
-  std::atomic<bool> &mExit;
-
 public:
   ConditionalWait(std::atomic<bool> &exit, bool init) : mExit(exit), mFlag(init) { }
-  void toggle() { mFlag = !mFlag; };
   operator bool() { return mFlag; }
+
+  void toggle() {
+    mFlag = !mFlag;
+    notify();
+  }
 
   void wait() {
     if (mFlag) return;
@@ -166,6 +170,8 @@ void capture_loop(LiveStream &stream, Options opts)
   std::cout << "OpticalFlow loaded" << std::endl;
 
   ConditionalWait face_wait(exit, opts.face_detect);
+  ConditionalWait ar_wait(exit, opts.face_detect);
+  ConditionalWait of_wait(exit, opts.face_detect);
   std::vector<std::thread> workers;
 
   workers.emplace_back([&faces, &exit, &face_wait]()
@@ -173,7 +179,6 @@ void capture_loop(LiveStream &stream, Options opts)
                         while(!exit) {
                           face_wait.wait();
                           faces.detect();
-                          std::cout << "detecting faces" << std::endl;
                         }
                        });
 
@@ -181,9 +186,8 @@ void capture_loop(LiveStream &stream, Options opts)
     workers.emplace_back([&ar, &exit, &opts]()
                          {
                           while(!exit) {
-                            if (opts.augmented_reality) {
-                              ar();
-                            }
+                            ar_wait.wait();
+                            ar();
                           }
                          });
   }
@@ -192,9 +196,8 @@ void capture_loop(LiveStream &stream, Options opts)
     workers.emplace_back([&of, &exit, &opts]()
                          {
                           while(!exit) {
-                            if (opts.optical_flow) {
-                              of();
-                            }
+                            of_wait.wait();
+                            of();
                           }
                          });
   }
@@ -237,18 +240,17 @@ void capture_loop(LiveStream &stream, Options opts)
         of.toggle_visualization();
         break;
       case 'o':
-        opts.optical_flow = !opts.optical_flow;
-        std::cout << "OpticalFlow: " << (opts.optical_flow ? "enabled" : "disabled") << std::endl;
+        of_wait.toggle();
+        std::cout << "OpticalFlow: " << (of_wait ? "enabled" : "disabled") << std::endl;
         break;
       case 'f':
         face_wait.toggle();
-        face_wait.notify();
         std::cout << "FaceDetection: " << (face_wait ? "enabled" : "disabled") << std::endl;
         break;
       case 'a':
+        ar_wait.toggle();
+        std::cout << "AugmentedReality: " << (ar_wait ? "enabled" : "disabled") << std::endl;
         stream.resetOverlay();
-        opts.augmented_reality = !opts.augmented_reality;
-        std::cout << "AugmentedReality: " << (opts.augmented_reality ? "enabled" : "disabled") << std::endl;
         break;
       default:
         break;
