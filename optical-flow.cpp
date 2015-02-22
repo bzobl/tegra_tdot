@@ -13,7 +13,7 @@ OpticalFlow::OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization)
   load_new_frame();
 
   mFarneback.numLevels = 5;         // number of pyramid layers including initial
-  mFarneback.pyrScale = 0.8;        // scale for pyramids. 0.5: next layer is twice smaller
+  mFarneback.pyrScale = 0.5;        // scale for pyramids. 0.5: next layer is twice smaller
   mFarneback.fastPyramids = false;
   mFarneback.winSize = 13;          // averaging window size
   mFarneback.numIters = 1;         // iterations per pyramid level
