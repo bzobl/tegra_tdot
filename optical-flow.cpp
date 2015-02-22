@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <iostream>
-#include <stringstream>
+#include <sstream>
 
 OpticalFlow::OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization)
                         : mStream(stream), mVisualizationImage(visualization)
