@@ -59,6 +59,7 @@ cv::Mat OpticalFlow::visualize_optical_flow(cv::Mat const &flowx, cv::Mat const 
   int const width = flowx.cols;
   int const height = flowx.rows;
   double const l_threshold = 2;
+  double const diff_threshold = 1;
   cv::Mat result = cv::Mat::zeros(flowx.rows, flowy.cols, CV_8UC3);;
 
   for (int y = 0; y < height; y += 10) {
@@ -73,10 +74,10 @@ cv::Mat OpticalFlow::visualize_optical_flow(cv::Mat const &flowx, cv::Mat const 
         cv::Point p2(x + dx, y + dy);
         cv::Scalar color;
         double diff = p.y - p2.y;
-        if (diff < (l_threshold * -1)) {
+        if (diff < (diff_threshold * -1)) {
           // arrow pointing down --> approaching
           color = cv::Scalar(0, 255, 0);
-        } else if (diff > l_threshold) {
+        } else if (diff > diff_threshold) {
           // arrow pointing up --> distancing
           color = cv::Scalar(0, 0, 255);
         } else {
