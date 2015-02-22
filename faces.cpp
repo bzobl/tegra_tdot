@@ -65,14 +65,15 @@ void Faces::tick()
     f.ttl--;
   }
 
-  std::remove_if(mFaces.begin(), mFaces.end(),
-                 [](FaceEntry const &f)
-                 {
-                   if (f.ttl <= 0) {
-                    std::cout << "face " << f.face << "timed out ttl=" << f.ttl << std::endl;
-                   }
-                   return f.ttl <= 0;
-                 });
+  auto end = std::remove_if(mFaces.begin(), mFaces.end(),
+                            [](FaceEntry const &f)
+                            {
+                              if (f.ttl <= 0) {
+                               std::cout << "face " << f.face << "timed out ttl=" << f.ttl << std::endl;
+                              }
+                              return f.ttl <= 0;
+                            });
+  std::erase(end, mFaces.end());
 }
 
 std::mutex &Faces::getMutex()
