@@ -8,18 +8,22 @@ Faces::Faces(std::string const &face_cascade) : mFaceCascade(face_cascade)
 {
 }
 
-void Faces::addFace(cv::Rect *face)
+void Faces::addFace(cv::Rect &face)
 {
+  int overlap_threshold = 20;
+
   for (auto &f : mFaces) {
+    cv::Rect intersect = f.face & face;
     // found intersecting face -> update
-    if ((f.face & *face).width > 0) {
+    if ((intersect.width > overlap_threshold) && (intersect.height > overlap_threshold)) {
       f.face = face;
       f.ttl = DEFAULT_TTL;
+      return;
     }
   }
 
   // no intersecting face found -> add new face
-  mFaces.emplace_back(*face, DEFAULT_TTL);
+  mFaces.emplace_back(face, DEFAULT_TTL);
 }
 
 bool Faces::detect(cv::Mat const &frame)
