@@ -75,7 +75,7 @@ cv::Mat OpticalFlow::visualize_optical_flow(cv::Mat const &flowx, cv::Mat const 
         cv::Scalar color;
         double diff = p.y - p2.y;
 
-        if (x <= width/2) {
+        if (y <= height/2) {
         // lower half -> arrow pointing down when approaching
           if (diff < (diff_threshold * -1)) {
             // arrow pointing down --> approaching
