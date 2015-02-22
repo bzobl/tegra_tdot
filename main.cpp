@@ -63,8 +63,8 @@ void capture_loop(LiveStream &stream, Options const &opts)
   //string const face_xml = "../opencv/data/haarcascades/haarcascade_frontalface_alt2.xml";
 
   vector<AlphaImage> hats;
-  Faces faces;
-  AugmentedReality ar(stream, faces, face_xml);
+  Faces faces(face_xml);
+  AugmentedReality ar(stream, faces);
   ar.addHat("sombrero.png");
   std::cout << "AugmentedReality loaded" << std::endl;
 
