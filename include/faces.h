@@ -22,7 +22,7 @@ private:
 
   int const DEFAULT_TTL = 10;
 
-  void addFace(cv::Rect *face);
+  void addFace(cv::Rect &face);
 
 public:
   Faces(std::string const &face_cascade);
