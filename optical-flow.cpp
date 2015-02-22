@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cassert>
+#include <iostream>
+#include <stringstream>
 
 OpticalFlow::OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization)
                         : mStream(stream), mVisualizationImage(visualization)
@@ -52,23 +54,23 @@ void OpticalFlow::use_farneback(cv::Mat &flowx, cv::Mat &flowy,
   dl_time_ms = ((double) cv::getTickCount() - dl_start) / cv::getTickFrequency() * 1000;
 }
 
-void OpticalFlow::visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy,
-                                            cv::Mat &result)
+cv::Mat OpticalFlow::visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy)
 {
   int const width = flowx.cols;
   int const height = flowx.rows;
-  double l_max = 10;
+  double const l_threshold = 0.2;
+  cv::Mat result;
 
   for (int y = 0; y < height; y += 10) {
     for (int x = 0; x < width; x += 10) {
       double dx = flowx.at<float>(y, x);
       double dy = flowy.at<float>(y, x);
 
-      cv::Point p(x, y);
-      double l = std::max(std::sqrt(dx*dx + dy*dy), l_max);
+      double l = std::sqrt(dx*dx + dy*dy);
 
-      if (l > 0) {
-        cv::Point p2(p.x + (int)dx, p.y + (int)dy);
+      if ((l > l_threshold)) {
+        cv::Point p(x, y);
+        cv::Point p2(x + dx, y + dy);
         cv::Scalar color;
         if (p.y > p2.y) {
           color = cv::Scalar(128, 128, 0);
@@ -79,6 +81,7 @@ void OpticalFlow::visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &fl
       }
     }
   }
+  return result;
 }
 
 void OpticalFlow::operator()()
@@ -96,12 +99,11 @@ void OpticalFlow::operator()()
   use_farneback(flowx, flowy, calc_time, dl_time);
 
   double visualize_start = (double) cv::getTickCount();
-  visualize_optical_flow(flowx, flowy, result);
+  result = visualize_optical_flow(flowx, flowy);
   double visualize_time_ms = ((double) cv::getTickCount() - visualize_start) / cv::getTickFrequency() * 1000;
 
   double total_time_ms = ((double) cv::getTickCount() - ul_start) / cv::getTickFrequency() * 1000;
 
-  /*
   {
     std::stringstream ss;
     cv::Point pos(50, 50);
@@ -121,13 +123,14 @@ void OpticalFlow::operator()()
     };
 
     for (auto t : times) {
+      std::cout << t.text << *t.time << "ms | ";
       ss << t.text << *t.time << "ms";
       cv::putText(result, ss.str(), pos, font, scale, color);
       ss.clear();
       pos.y += 10;
     }
+    std::cout << std::endl;
   }
-  */
 
   mVisualizationImage.update(result);
 }

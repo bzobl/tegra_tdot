@@ -23,7 +23,7 @@ private:
 
   void load_new_frame();
   void use_farneback(cv::Mat &flowx, cv::Mat &flowy, double &calc_time, double &dl_time);
-  void visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy, cv::Mat &result);
+  cv::Mat visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy);
 
 public:
   OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization);
