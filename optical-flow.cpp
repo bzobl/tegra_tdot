@@ -8,8 +8,7 @@ OpticalFlow::OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization)
 {
   cv::Mat frame;
   mStream.getFrame(frame);
-  mGpuImg1(frame);
-  mGpuImg2(frame);
+  mGpuImg2.upload(frame);
 
   mNowGpuImg = &mGpuImg1;
   mLastGpuImg = &mGpuImg2;
