@@ -182,25 +182,21 @@ void capture_loop(LiveStream &stream, Options opts)
                         }
                        });
 
-  if (opts.face_detect) {
-    workers.emplace_back([&ar, &exit, &opts]()
-                         {
-                          while(!exit) {
-                            ar_wait.wait();
-                            ar();
-                          }
-                         });
-  }
+  workers.emplace_back([&ar, &exit, &ar_wait]()
+                       {
+                        while(!exit) {
+                          ar_wait.wait();
+                          ar();
+                        }
+                       });
 
-  if (opts.optical_flow) {
-    workers.emplace_back([&of, &exit, &opts]()
-                         {
-                          while(!exit) {
-                            of_wait.wait();
-                            of();
-                          }
-                         });
-  }
+  workers.emplace_back([&of, &exit, &af_wait]()
+                       {
+                        while(!exit) {
+                          of_wait.wait();
+                          of();
+                        }
+                       });
 
   const std::string live_feed_window = "Live Feed";
   /*
@@ -235,6 +231,9 @@ void capture_loop(LiveStream &stream, Options opts)
     switch (key) {
       case 'q':
         exit = true;
+        ar_wait.notify();
+        of_wait.notify();
+        face_wait.notify();
         break;
       case 'v':
         of.toggle_visualization();
