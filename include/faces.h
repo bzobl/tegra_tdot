@@ -16,7 +16,7 @@ private:
   int const DEFAULT_TTL = 10;
 
   struct FaceEntry {
-    cv::rect face;
+    cv::Rect face;
     int ttl;
   };
 
