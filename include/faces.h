@@ -10,15 +10,15 @@
 class Faces {
 
 private:
-  std::mutex mMutex;
-  std::vector<cv::Rect> mFaces;
-
-  int const DEFAULT_TTL = 10;
-
   struct FaceEntry {
     cv::Rect face;
     int ttl;
   };
+
+  std::mutex mMutex;
+  std::vector<FaceEntry> mFaces;
+
+  int const DEFAULT_TTL = 10;
 
   void addFace(cv::Rect *face);
 

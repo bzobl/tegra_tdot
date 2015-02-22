@@ -53,7 +53,11 @@ std::mutex &Faces::getMutex()
   return mMutex;
 }
 
-std::vector<cv::Rect> &Faces::getFaces()
+std::vector<cv::Rect> Faces::getFaces()
 {
-  return mFaces;
+  std::vector<cv::Rect> faces;
+  for (auto &f : mFaces) {
+    faces.push_back(f.face);
+  }
+  return faces;
 }
