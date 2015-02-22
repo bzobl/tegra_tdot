@@ -162,10 +162,11 @@ void OpticalFlow::operator()()
   use_farneback(flowx, flowy, calc_time, dl_time);
 
   double visualize_start = (double) cv::getTickCount();
-  result = visualize_optical_flow(flowx, flowy);
-
-  
-
+  if (visualization_type == OPTICAL_FLOW_VISUALIZATION_ARROWS) {
+    result = visualize_optical_flow_arrows(flowx, flowy);
+  } else if (visualization_type == OPTICAL_FLOW_VISUALIZATION_BLOCKS) {
+    result = visualize_optical_flow_blocks(flowx, flowy);
+  }
   double visualize_time_ms = ((double) cv::getTickCount() - visualize_start) / cv::getTickFrequency() * 1000;
 
   double total_time_ms = ((double) cv::getTickCount() - ul_start) / cv::getTickFrequency() * 1000;

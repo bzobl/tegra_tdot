@@ -20,7 +20,6 @@ private:
   cv::cuda::GpuMat mGpuImg2;
   cv::cuda::GpuMat *mNowGpuImg, *mLastGpuImg;
 
-  cv::Mat mDirections;
   static int const DIRECTION_UNDEFINED = 0;
   static int const DIRECTION_APPROACHING = 1;
   static int const DIRECTION_DISTANCING = 2;
@@ -41,6 +40,12 @@ public:
   bool isReady();
   void operator()();
 
+  enum {
+    OPTICAL_FLOW_VISUALIZATION_BLOCKS,
+    OPTICAL_FLOW_VISUALIZATION_ARROWS,
+  } VisualizationType;
+
+  VisualizationType visualization_type = OPTICAL_FLOW_VISUALIZATION_ARROWS;
 };
 
 #endif
