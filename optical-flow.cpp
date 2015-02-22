@@ -248,7 +248,6 @@ cv::Mat OpticalFlow::visualize_optical_flow_faces(cv::Mat const &flowx, cv::Mat 
           color = cv::Scalar(0, 0, 255);
           break;
         default:
-          std::cout << "face is nothing" << std::endl;
           color = cv::Scalar(255, 255, 255);
           break;
       }
@@ -351,7 +350,11 @@ void OpticalFlow::setFaces(Faces *faces)
 
 void OpticalFlow::toggle_visualization()
 {
-  std::cout << "toggling visualization" << std::endl;
+
+  mVisualization = (VisualizationType)((mVisualization + 1) % OPTICAL_FLOW_VISUALIZATION_LAST_ENTRY);
+
+  std::cout << "Optical Flow Visualization: " << VISUALIZATION_NAMES[mVisualization] << std::endl;
+
   if (mVisualization == OpticalFlow::OPTICAL_FLOW_VISUALIZATION_ARROWS) {
     mVisualization = OpticalFlow::OPTICAL_FLOW_VISUALIZATION_BLOCKS;
   } else if (mVisualization == OpticalFlow::OPTICAL_FLOW_VISUALIZATION_BLOCKS) {

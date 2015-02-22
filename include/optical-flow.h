@@ -1,6 +1,8 @@
 #ifndef OPTICAL_FLOW_H_INCLUDED
 #define OPTICAL_FLOW_H_INCLUDED
 
+#include <map>
+
 #include "opencv2/cuda.hpp"
 #include "opencv2/cudaoptflow.hpp"
 
@@ -32,10 +34,18 @@ private:
   void use_farneback(cv::Mat &flowx, cv::Mat &flowy, double &calc_time, double &dl_time);
 
   enum VisualizationType {
-    OPTICAL_FLOW_VISUALIZATION_BLOCKS = 1,
-    OPTICAL_FLOW_VISUALIZATION_ARROWS = 2,
-    OPTICAL_FLOW_VISUALIZATION_FACES = 3,
+    OPTICAL_FLOW_VISUALIZATION_FACES = 0,
+    OPTICAL_FLOW_VISUALIZATION_ARROWS = 1,
+    OPTICAL_FLOW_VISUALIZATION_BLOCKS = 2,
+    OPTICAL_FLOW_VISUALIZATION_LAST_ENTRY
   };
+
+  static const std::map<VisualizationType, std::string> VISUALIZATION_NAMES
+  (
+    { OPTICAL_FLOW_VISUALIZATION_FACES,  "Faces" },
+    { OPTICAL_FLOW_VISUALIZATION_ARROWS, "Arrows" },
+    { OPTICAL_FLOW_VISUALIZATION_BLOCKS, "Blocks" },
+  );
 
   VisualizationType mVisualization = OPTICAL_FLOW_VISUALIZATION_ARROWS;
 
