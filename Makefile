@@ -22,7 +22,8 @@ LIBS = $(addprefix -l, $(C_LIB))
 
 CPP_SRC  = main.cpp      					\
 					 alpha-image.cpp				\
-					 livestream.cpp
+					 livestream.cpp   			\
+					 thread-safe-mat.cpp
 
 CPP_H    = $(wildcard $(C_INCL)/*.h)
 

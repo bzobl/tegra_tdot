@@ -11,6 +11,7 @@
 #include "opencv2/cudaoptflow.hpp"
 
 #include "livestream.h"
+#include "thread-safe-mat.h"
 
 using namespace std;
 using namespace cv;
@@ -71,7 +72,7 @@ cv::Mat optical_flow_farneback(cv::cuda::GpuMat *last, cv::cuda::GpuMat *now,
   return visualize_optical_flow(flowx, flowy);
 }
 
-void optical_flow_thread(LiveStream &stream, std::atomic<bool> &exit)
+void optical_flow_thread(LiveStream &stream, ThreadSafeMat &visualization, std::atomic<bool> &exit)
 {
   timepoint upload_start, upload_stop,
             calc_start, calc_stop,
@@ -120,7 +121,8 @@ void optical_flow_thread(LiveStream &stream, std::atomic<bool> &exit)
        << std::endl;
 
     cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
-    cv::imshow("OptFlow", result);
+    //cv::imshow("OptFlow", result);
+    visualization.update(image);
 
     // check for button press for 10ms. necessary for opencv to refresh windows
     /*
@@ -221,7 +223,8 @@ void capture_loop(LiveStream &stream)
   vector<AlphaImage> hats;
   hats.emplace_back("sombrero.png");
 
-  std::thread opt_flow_thread(optical_flow_thread, std::ref(stream), std::ref(exit));
+  ThreadSafeMat opt_flow;
+  std::thread opt_flow_thread(optical_flow_thread, std::ref(stream), std::ref(opt_flow), std::ref(exit));
   //opt_flow_thread.join();
 
   std::thread detection_thread(facerecognition_thread,
@@ -251,6 +254,7 @@ void capture_loop(LiveStream &stream)
     cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
 
     cv::imshow(live_feed_window, image);
+    cv::imshow("OptFlow", opt_flow.get());
 
     // check for button press for 10ms. necessary for opencv to refresh windows
     char key = cv::waitKey(10);
@@ -264,6 +268,7 @@ void capture_loop(LiveStream &stream)
   }
 
   detection_thread.join();
+  opt_flow_thread.join();
 }
 
 int main(int argc, char **argv)
