@@ -10,12 +10,13 @@ Faces::Faces(std::string const &face_cascade) : mFaceCascade(face_cascade)
 
 void Faces::addFace(cv::Rect &face)
 {
-  int overlap_threshold = 20;
+  int separate_threshold = 20;
 
   for (auto &f : mFaces) {
     cv::Rect intersect = f.face & face;
     // found intersecting face -> update
-    if ((intersect.width > overlap_threshold) && (intersect.height > overlap_threshold)) {
+    if (   (intersect.width > 0) && (intersect.width < separate_threshold)
+        && (intersect.height > 0) && (intersect.height < separate_threshold)) {
       f.face = face;
       f.ttl = DEFAULT_TTL;
       return;
@@ -60,7 +61,7 @@ void Faces::tick()
   }
 
   std::remove_if(mFaces.begin(), mFaces.end(),
-                 [](FaceEntry const &f) { return f.ttl == 0; });
+                 [](FaceEntry const &f) { return f.ttl <= 0; });
 }
 
 std::mutex &Faces::getMutex()
