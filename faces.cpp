@@ -23,7 +23,7 @@ void Faces::addFace(cv::Rect &face)
   }
 
   // no intersecting face found -> add new face
-  mFaces.emplace_back(face, DEFAULT_TTL);
+  mFaces.emplace_back({face, DEFAULT_TTL});
 }
 
 bool Faces::detect(cv::Mat const &frame)
