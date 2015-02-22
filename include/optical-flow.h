@@ -42,9 +42,9 @@ private:
 
   static const std::map<VisualizationType, std::string> VISUALIZATION_NAMES
   (
-    { OPTICAL_FLOW_VISUALIZATION_FACES,  "Faces" },
-    { OPTICAL_FLOW_VISUALIZATION_ARROWS, "Arrows" },
-    { OPTICAL_FLOW_VISUALIZATION_BLOCKS, "Blocks" },
+    { VisualizationType::OPTICAL_FLOW_VISUALIZATION_FACES,  "Faces" },
+    { VisualizationType::OPTICAL_FLOW_VISUALIZATION_ARROWS, "Arrows" },
+    { VisualizationType::OPTICAL_FLOW_VISUALIZATION_BLOCKS, "Blocks" },
   );
 
   VisualizationType mVisualization = OPTICAL_FLOW_VISUALIZATION_ARROWS;
