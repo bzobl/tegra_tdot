@@ -12,7 +12,7 @@ class OpticalFlow {
 private:
   LiveStream &mStream;
 
-  ThreadSafeMat &mVisualizationImage;
+  ThreadSafeMat *mVisualizationImage;
 
   cv::cuda::FarnebackOpticalFlow mFarneback;
 

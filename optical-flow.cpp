@@ -6,7 +6,7 @@
 #include <sstream>
 
 OpticalFlow::OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization)
-                        : mStream(stream), mVisualizationImage(visualization)
+                        : mStream(stream), mVisualizationImage(&visualization)
 {
   mNowGpuImg = &mGpuImg1;
   mLastGpuImg = &mGpuImg2;
@@ -88,8 +88,7 @@ void OpticalFlow::operator()()
 {
   assert(isReady());
 
-  cv::Mat flowx, flowy;
-  cv::Mat result;
+  cv::Mat flowx, flowy, result;
 
   double ul_start = (double) cv::getTickCount();
   load_new_frame();
@@ -123,7 +122,6 @@ void OpticalFlow::operator()()
     };
 
     for (auto t : times) {
-      std::cout << t.text << *t.time << "ms | ";
       ss << t.text << *t.time << "ms";
       cv::putText(result, ss.str(), pos, font, scale, color);
       ss.clear();
@@ -132,5 +130,5 @@ void OpticalFlow::operator()()
     std::cout << std::endl;
   }
 
-  mVisualizationImage.update(result);
+  mVisualizationImage->update(result);
 }
