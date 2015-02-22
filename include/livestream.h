@@ -32,6 +32,8 @@ public:
   virtual ~LiveStream();
 
   bool isOpened() const;
+  int width() const;
+  int height() const;
 
   void getFrame(cv::Mat &frame);
   void nextFrame(cv::Mat &frame);

@@ -223,7 +223,7 @@ void capture_loop(LiveStream &stream)
   vector<AlphaImage> hats;
   hats.emplace_back("sombrero.png");
 
-  ThreadSafeMat opt_flow(cv::Mat::zeros(480, 640, CV_8UC3));
+  ThreadSafeMat opt_flow(cv::Mat::zeros(stream.height(), stream.width(), CV_8UC3));
   std::thread opt_flow_thread(optical_flow_thread, std::ref(stream), std::ref(opt_flow), std::ref(exit));
   //opt_flow_thread.join();
 

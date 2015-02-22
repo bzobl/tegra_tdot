@@ -86,6 +86,16 @@ bool LiveStream::isOpened() const
   return mCamera.isOpened();
 }
 
+int LiveStream::width() const
+{
+  return mStreamWidth;
+}
+
+int LiveStream::height() const
+{
+  return mStreamHeight;
+}
+
 void LiveStream::getFrame(cv::Mat &frame)
 {
   std::unique_lock<std::mutex> l(mFrameMutex);
