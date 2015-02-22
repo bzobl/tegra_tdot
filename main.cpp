@@ -115,7 +115,7 @@ private:
   std::atomic<bool> &mExit;
 
 public:
-  ConditionalWait(std::atomic<bool> &exit) : mExit(exit) { }
+  ConditionalWait(std::atomic<bool> &exit, bool init) : mExit(exit), mFlag(init) { }
   void toggle() { mFlag = !mFlag; };
   operator bool() { return mFlag; }
 
@@ -165,7 +165,7 @@ void capture_loop(LiveStream &stream, Options opts)
   }
   std::cout << "OpticalFlow loaded" << std::endl;
 
-  ConditionalWait face_wait(exit);
+  ConditionalWait face_wait(exit, opts.face_detect);
   std::vector<std::thread> workers;
 
   workers.emplace_back([&faces, &exit, &face_wait]()
