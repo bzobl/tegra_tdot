@@ -178,7 +178,7 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
           break;
       }
 
-      cv::rectangle(result, roi, color, cv::CV_FILLED);
+      cv::rectangle(result, roi, color, cv::FILLED);
     }
   }
 
