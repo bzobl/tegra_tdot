@@ -239,7 +239,7 @@ cv::Mat OpticalFlow::visualize_optical_flow_faces(cv::Mat const &flowx, cv::Mat 
                                    << "] ";
 
       int block_direction = DIRECTION_UNDEFINED;
-      int const threshold = 1;
+      int const threshold = 30;
       if ((sum_approaching > sum_distancing) && (sum_approaching > threshold)) {
           block_direction = DIRECTION_APPROACHING;
       } else if (sum_distancing > threshold) {
@@ -263,7 +263,6 @@ cv::Mat OpticalFlow::visualize_optical_flow_faces(cv::Mat const &flowx, cv::Mat 
       }
 
       cv::rectangle(result, face, color, cv::FILLED);
-      cv::rectangle(result, face, cv::Scalar(255, 255, 255), 1);
     }
   }
 
