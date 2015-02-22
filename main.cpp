@@ -364,7 +364,7 @@ int check_options(Options &opts, int const argc, char const * const *argv)
 int main(int argc, char **argv)
 {
   Options opts;
-  int nopts = check_options(opts, argc - 1, argv + 1);
+  int nopts = check_options(opts, argc, argv);
   if (nopts == -1) {
     usage(argv[0]);
     return 1;
