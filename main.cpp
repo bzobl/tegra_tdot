@@ -120,9 +120,9 @@ void optical_flow_thread(LiveStream &stream, ThreadSafeMat &visualization, std::
        << std::chrono::duration_cast<std::chrono::milliseconds>(total_stop - total_start).count()
        << std::endl;
 
-    cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
+    cv::putText(result, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
     //cv::imshow("OptFlow", result);
-    visualization.update(image);
+    visualization.update(result);
 
     // check for button press for 10ms. necessary for opencv to refresh windows
     /*
