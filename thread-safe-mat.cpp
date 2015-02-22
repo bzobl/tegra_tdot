@@ -9,7 +9,7 @@ ThreadSafeMat::ThreadSafeMat(cv::Mat mat)
   mat.copyTo(mMat);
 }
 
-cv::Mat &&ThreadSafeMat::get()
+cv::Mat ThreadSafeMat::get()
 {
   std::unique_lock<std::mutex> l(mMutex);
   cv::Mat ret;

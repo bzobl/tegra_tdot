@@ -15,7 +15,7 @@ public:
   ThreadSafeMat();
   ThreadSafeMat(cv::Mat mat);
 
-  cv::Mat &&get();
+  cv::Mat get();
   void update(cv::Mat new_mat);
 
 };
