@@ -101,6 +101,7 @@ void OpticalFlow::operator()()
 
   double total_time_ms = ((double) cv::getTickCount() - ul_start) / cv::getTickFrequency() * 1000;
 
+  /*
   {
     std::stringstream ss;
     cv::Point pos(50, 50);
@@ -126,6 +127,7 @@ void OpticalFlow::operator()()
       pos.y += 10;
     }
   }
+  */
 
   mVisualizationImage.update(result);
 }
