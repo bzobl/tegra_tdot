@@ -40,7 +40,7 @@ private:
     OPTICAL_FLOW_VISUALIZATION_LAST_ENTRY
   };
 
-  static const std::map<OpticalFlow::VisualizationType, std::string> VISUALIZATION_NAMES; 
+  static std::map<OpticalFlow::VisualizationType, std::string> mVisualizationNames; 
 
   VisualizationType mVisualization = OPTICAL_FLOW_VISUALIZATION_ARROWS;
 
