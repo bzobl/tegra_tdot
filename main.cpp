@@ -24,16 +24,18 @@ struct Options {
   int width = 640;
   int height = 480;
   bool face_detect = false;
+  bool augmented_reality = false;
   bool optical_flow = false;
 };
 
 std::ostream &operator<<(ostream &out, Options const &o)
 {
-  out << "Camera:       " << o.cam_num << std::endl
-      << "Width:        " << o.width << std::endl
-      << "Height:       " << o.height << std::endl
-      << "Facedetect:   " << std::boolalpha << o.face_detect << std::endl
-      << "Optical Flow: " << std::boolalpha << o.optical_flow << std::endl;
+  out << "Camera:            " << o.cam_num << std::endl
+      << "Width:             " << o.width << std::endl
+      << "Height:            " << o.height << std::endl
+      << "Facedetect:        " << std::boolalpha << o.face_detect << std::endl
+      << "Augmented Reality: " << std::boolalpha << o.augmented_reality << std::endl
+      << "Optical Flow:      " << std::boolalpha << o.optical_flow << std::endl;
   return out;
 }
 
@@ -46,13 +48,65 @@ void usage(char const * const progname)
             << " -c, --camera: Number of the camera to capture. E.g. 0 for /dev/video0" << std::endl
             << " -w, --width: Width of the captured image" << std::endl
             << " -h, --height: Height of the captured image" << std::endl
-            << " -f, --face-detect: Enable face detection and augmented reality" << std::endl
+            << " -f, --face-detect: Enable face detection" << std::endl
+            << "                    (needed for augmented reality and face visualization of optical flow" << std::endl
+            << " -a, --augmented-reality: Enable augmented reality" << std::endl
             << " -o, --optical-flow: Enable optical flow analysis" << std::endl
             << " --help: Show this help" << std::endl
             << std::endl;
 }
 
-void capture_loop(LiveStream &stream, Options const &opts)
+// returns processed arguments
+int check_options(Options &opts, int const argc, char const * const *argv)
+{
+  int i = 1;
+  for (; i < argc; i++) {
+    std::string arg(argv[i]);
+
+    if (arg.find_first_of("-") == std::string::npos) {
+      break;
+    }
+
+    if (arg == "-w" || arg == "--width") {
+      if ((i + 1) >= argc) {
+        std::cerr << "missing value for " << arg << std::endl;
+        return -1;
+      }
+      opts.width = atoi(argv[i + 1]);
+      i++;
+    } else if (arg == "-h" || arg == "--height") {
+      if ((i + 1) >= argc) {
+        std::cerr << "missing value for " << arg << std::endl;
+        return -1;
+      }
+      opts.height = atoi(argv[i + 1]);
+      i++;
+    } else if (arg == "-c" || arg == "--camera") {
+      if ((i + 1) >= argc) {
+        std::cerr << "missing value for " << arg << std::endl;
+        return -1;
+      }
+      opts.cam_num = atoi(argv[i + 1]);
+      i++;
+    } else if (arg == "-f" || arg == "--face-detect") {
+      opts.face_detect = true;
+    } else if (arg == "-a" || arg == "--augmented-reality") {
+      opts.augmented_reality = true;
+    } else if (arg == "-o" || arg == "--optical-flow") {
+      opts.optical_flow = true;
+    } else if (arg == "--help") {
+      return -1;
+    } else {
+      std::cerr << "unknown option: " << arg << std::endl;
+      return -1;
+    }
+  }
+
+  return i;
+}
+
+
+void capture_loop(LiveStream &stream, Options opts)
 {
   std::atomic<bool> exit(false);
   cv::Mat image;
@@ -62,29 +116,60 @@ void capture_loop(LiveStream &stream, Options const &opts)
   string const face_xml = "./face.xml";
 
   vector<AlphaImage> hats;
-  Faces faces(face_xml);
-  AugmentedReality ar(stream, faces);
+  Faces faces(stream, face_xml);
+  if (!faces.isReady()) {
+    std::cerr << "loading FaceDetection failed" << std::endl;
+    return;
+  }
+  std::cout << "FaceDetection loaded" << std::endl;
+
+  AugmentedReality ar(stream, &faces);
   ar.addHat("sombrero.png");
+  if (!ar.ready()) {
+    std::cerr << "loading AugmentedReality failed" << std::endl;
+    return;
+  }
   std::cout << "AugmentedReality loaded" << std::endl;
 
   ThreadSafeMat of_visualize(cv::Mat::zeros(stream.height(), stream.width(), CV_8UC3));
   OpticalFlow of(stream, of_visualize);
   of.setFaces(&faces);
+  if (!of.isReady()) {
+    std::cerr << "loading OpticalFlow failed" << std::endl;
+    return;
+  }
   std::cout << "OpticalFlow loaded" << std::endl;
 
   std::vector<std::thread> workers;
 
+  workers.emplace_back([&faces, &exit, &opts]()
+                       {
+                        while(!exit) {
+                          if (opts.face_detect) {
+                            faces.detect();
+                          }
+                        }
+                       });
+
   if (opts.face_detect) {
-    workers.emplace_back([&ar, &exit]()
+    workers.emplace_back([&ar, &exit, &opts]()
                          {
-                          while(!exit) { ar(); }
+                          while(!exit) {
+                            if (opts.augmented_reality) {
+                              ar();
+                            }
+                          }
                          });
   }
 
   if (opts.optical_flow) {
-    workers.emplace_back([&of, &exit]()
+    workers.emplace_back([&of, &exit, &opts]()
                          {
-                          while(!exit) { of(); }
+                          while(!exit) {
+                            if (opts.optical_flow) {
+                              of();
+                            }
+                          }
                          });
   }
 
@@ -125,6 +210,18 @@ void capture_loop(LiveStream &stream, Options const &opts)
       case 'v':
         of.toggle_visualization();
         break;
+      case 'o':
+        opts.optical_flow = !opts.optical_flow;
+        std::cout << "OpticalFlow: " << (opts.optical_flow ? "enabled" : "disabled") << std::endl;
+        break;
+      case 'f':
+        opts.face_detect = !opts.face_detect;
+        std::cout << "FaceDetection: " << (opts.face_detect ? "enabled" : "disabled") << std::endl;
+        break;
+      case 'a':
+        opts.augmented_reality = !opts.augmented_reality;
+        std::cout << "AugmentedReality: " << (opts.augmented_reality ? "enabled" : "disabled") << std::endl;
+        break;
       default:
         break;
     }
@@ -133,53 +230,6 @@ void capture_loop(LiveStream &stream, Options const &opts)
   for (auto &t : workers) {
     t.join();
   }
-}
-
-// returns processed arguments
-int check_options(Options &opts, int const argc, char const * const *argv)
-{
-  int i = 1;
-  for (; i < argc; i++) {
-    std::string arg(argv[i]);
-
-    if (arg.find_first_of("-") == std::string::npos) {
-      break;
-    }
-
-    if (arg == "-w" || arg == "--width") {
-      if ((i + 1) >= argc) {
-        std::cerr << "missing value for " << arg << std::endl;
-        return -1;
-      }
-      opts.width = atoi(argv[i + 1]);
-      i++;
-    } else if (arg == "-h" || arg == "--height") {
-      if ((i + 1) >= argc) {
-        std::cerr << "missing value for " << arg << std::endl;
-        return -1;
-      }
-      opts.height = atoi(argv[i + 1]);
-      i++;
-    } else if (arg == "-c" || arg == "--camera") {
-      if ((i + 1) >= argc) {
-        std::cerr << "missing value for " << arg << std::endl;
-        return -1;
-      }
-      opts.cam_num = atoi(argv[i + 1]);
-      i++;
-    } else if (arg == "-f" || arg == "--face-detect") {
-      opts.face_detect = true;
-    } else if (arg == "-o" || arg == "--optical-flow") {
-      opts.optical_flow = true;
-    } else if (arg == "--help") {
-      return -1;
-    } else {
-      std::cerr << "unknown option: " << arg << std::endl;
-      return -1;
-    }
-  }
-
-  return i;
 }
 
 int main(int argc, char **argv)

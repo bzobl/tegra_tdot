@@ -1,25 +1,20 @@
 #include "faces.h"
 
 #include <algorithm>
+#include <cassert>
 #include <iostream>
 
 #include "opencv2/imgproc.hpp"
 
-Faces::Faces(std::string const &face_cascade) : mFaceCascade(face_cascade)
+Faces::Faces(LiveStream &stream, std::string const &face_cascade) : mStream(stream),
+                                                                    mFaceCascade(face_cascade)
 {
 }
 
 void Faces::addFace(cv::Rect &face)
 {
-  int separate_threshold = 20;
-
   for (auto &f : mFaces) {
     cv::Rect intersect = f.face & face;
-    // found intersecting face -> update
-    /*
-    if (   (intersect.width > 0) && (intersect.width < separate_threshold)
-        && (intersect.height > 0) && (intersect.height < separate_threshold)) {
-    */
     if (intersect.width > 0) {
       f.face = face;
       f.ttl = DEFAULT_TTL;
@@ -32,21 +27,29 @@ void Faces::addFace(cv::Rect &face)
   mFaces.emplace_back(f);
 }
 
-bool Faces::detect(cv::Mat const &frame)
+bool Faces::isReady()
 {
-  if (mFaceCascade.empty()) return false;
+  return mStream.isOpened() && !mFaceCascade.empty();
+}
+
+bool Faces::detect()
+{
+  assert(isReady());
+
+  cv::Mat frame, h_faces;
+  cv::cuda::GpuMat d_frame, d_faces;
+  std::vector<cv::Rect> faces;
 
   std::unique_lock<std::mutex> l(mMutex);
 
-  std::vector<cv::Rect> faces;
-  cv::cuda::GpuMat d_faces;
-  cv::Mat h_faces;
+  // update ttl of all faces
+  tick();
 
-  cv::Mat gray;
-  cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-  cv::cuda::GpuMat d_gray(gray);
+  mStream.getFrame(frame);
+  cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
+  d_frame.upload(frame);
 
-  int n_detected = mFaceCascade.detectMultiScale(d_gray, d_faces, 1.2, 8, cv::Size(40, 40));
+  int n_detected = mFaceCascade.detectMultiScale(d_frame, d_faces, 1.2, 8, cv::Size(40, 40));
 
   d_faces.colRange(0, n_detected).download(h_faces);
   cv::Rect *prect = h_faces.ptr<cv::Rect>();
@@ -54,8 +57,6 @@ bool Faces::detect(cv::Mat const &frame)
   for (int i = 0; i < n_detected; i++) {
     addFace(prect[i]);
   }
-
-  return true;
 }
 
 void Faces::tick()

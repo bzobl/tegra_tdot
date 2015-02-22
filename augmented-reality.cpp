@@ -21,18 +21,17 @@ void AugmentedReality::operator()()
 
   cv::Mat frame;
   mStream.getFrame(frame);
-  mFaces.detect(frame);
+  mFaces->detect(frame);
 
   // for the duration of resetting the overlay no other thread must use the overlay
   {
     std::unique_lock<std::mutex> sl(mStream.getOverlayMutex(), std::defer_lock);
-    std::unique_lock<std::mutex> fl(mFaces.getMutex(), std::defer_lock);
+    std::unique_lock<std::mutex> fl(mFaces->getMutex(), std::defer_lock);
     lock(sl, fl);
 
     mStream.resetOverlay();
-    mFaces.tick();
 
-    for (cv::Rect face : mFaces.getFaces()) {
+    for (cv::Rect face : mFaces->getFaces()) {
       AlphaImage &hat(mHats[0]); 
 
       int width = face.width * 2;

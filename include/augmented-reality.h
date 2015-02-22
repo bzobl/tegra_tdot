@@ -14,12 +14,12 @@ class AugmentedReality {
 
 private:
   LiveStream &mStream;
-  Faces &mFaces;
+  Faces *mFaces;
 
   std::vector<AlphaImage> mHats;
 
 public:
-  AugmentedReality(LiveStream &stream, Faces &faces);
+  AugmentedReality(LiveStream &stream, Faces *faces);
 
   void addHat(std::string const &file);
 

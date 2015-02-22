@@ -7,6 +7,8 @@
 #include "opencv2/core.hpp"
 #include "opencv2/cuda.hpp"
 
+#include "livestream.h"
+
 class Faces {
 
 private:
@@ -14,6 +16,8 @@ private:
     cv::Rect face;
     int ttl;
   };
+
+  LiveStream &mStream;
 
   cv::cuda::CascadeClassifier_CUDA mFaceCascade;
 
@@ -25,9 +29,10 @@ private:
   void addFace(cv::Rect &face);
 
 public:
-  Faces(std::string const &face_cascade);
+  Faces(LiveStream &stream, std::string const &face_cascade);
 
-  bool detect(cv::Mat const &frame);
+  bool isReady();
+  bool detect();
 
   void tick();
 
