@@ -228,7 +228,7 @@ void facerecognition_thread(LiveStream &stream, std::string const & cascade_face
   }
 }
 
-void capture_loop(LiveStream &stream)
+void capture_loop(LiveStream &stream, Options const &opts)
 {
   std::atomic<bool> exit(false);
   cv::Mat image;
@@ -241,13 +241,20 @@ void capture_loop(LiveStream &stream)
   vector<AlphaImage> hats;
   hats.emplace_back("sombrero.png");
 
-  ThreadSafeMat opt_flow(cv::Mat::zeros(stream.height(), stream.width(), CV_8UC3));
-  std::thread opt_flow_thread(optical_flow_thread, std::ref(stream), std::ref(opt_flow), std::ref(exit));
-  //opt_flow_thread.join();
+  std::vector<std::thread> workers;
 
-  std::thread detection_thread(facerecognition_thread,
-                               std::ref(stream), face_xml,
-                               std::ref(hats[0]), std::ref(exit));
+  ThreadSafeMat opt_flow(cv::Mat::zeros(stream.height(), stream.width(), CV_8UC3));
+
+  if (opts.optical_flow) {
+    workers.emplace_back(optical_flow_thread,
+                         std::ref(stream), std::ref(opt_flow), std::ref(exit));
+  }
+
+  if (opts.face_detect) {
+    workers.emplace_back(facerecognition_thread,
+                         std::ref(stream), face_xml,
+                         std::ref(hats[0]), std::ref(exit));
+  }
 
   const std::string live_feed_window = "Live Feed";
   /*
@@ -265,6 +272,10 @@ void capture_loop(LiveStream &stream)
 
     stream.applyOverlay(image);
 
+    if (opts.optical_flow) {
+      cv::imshow("OptFlow", opt_flow.get());
+    }
+
     t = ((double) getTickCount() - t) / getTickFrequency();
     std::stringstream ss;
     ss << "Time: " << t*1000 << "ms | FPS: " << 1/t;
@@ -272,7 +283,6 @@ void capture_loop(LiveStream &stream)
     cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
 
     cv::imshow(live_feed_window, image);
-    cv::imshow("OptFlow", opt_flow.get());
 
     // check for button press for 10ms. necessary for opencv to refresh windows
     char key = cv::waitKey(10);
@@ -285,8 +295,10 @@ void capture_loop(LiveStream &stream)
     }
   }
 
-  detection_thread.join();
-  opt_flow_thread.join();
+
+  for (auto &t : workers) {
+    t.join();
+  }
 }
 
 // returns processed arguments
@@ -348,7 +360,7 @@ int main(int argc, char **argv)
     return -1;
   }
 
-  capture_loop(live);
+  capture_loop(live, opts);
 
   return 0;
 }
