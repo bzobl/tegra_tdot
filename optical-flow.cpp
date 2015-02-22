@@ -130,7 +130,12 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
                                        : (mStream.width() - x * x_pixels_per_block);
       int height = (y != n_yblocks - 1) ? y_pixels_per_block
                                         : (mStream.height() - y * y_pixels_per_block);
+
       cv::Rect roi(x * x_pixels_per_block, y * y_pixels_per_block, width, height);
+      std::cout << "block " << x << "/" << y
+                << ": width " << width << ", height " << height
+                << ", start at " << roi.x << "/" << roi.y
+                << std::endl;
 
       int sum_approaching = std::count_if(directions(roi).begin<uchar>(),
                                           directions(roi).end<uchar>(),
@@ -138,18 +143,21 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
                                           {
                                             return v == DIRECTION_APPROACHING;
                                           });
+      std::cout << "approaching: " << sum_approaching << std::endl;
       int sum_distancing = std::count_if(directions(roi).begin<uchar>(),
                                          directions(roi).end<uchar>(),
                                          [](unsigned char v)
                                          {
                                            return v == DIRECTION_DISTANCING;
                                          });
+      std::cout << "distancing: " << sum_distancing << std::endl;
       int sum_undefined = std::count_if(directions(roi).begin<uchar>(),
                                         directions(roi).end<uchar>(),
                                         [](unsigned char v)
                                         {
                                           return (v != DIRECTION_APPROACHING) && (v != DIRECTION_DISTANCING);
                                         });
+      std::cout << "undefined: " << sum_undefined << std::endl;
 
       int block_direction;
       if (sum_approaching > sum_distancing) {
