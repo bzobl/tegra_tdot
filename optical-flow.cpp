@@ -156,7 +156,7 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
                                    << "]" << std::endl;
 
       int block_direction = DIRECTION_UNDEFINED;
-      int const threshold = 5;
+      int const threshold = 1;
       if (sum_approaching > sum_distancing) {
         /*
         if (sum_undefined > sum_approaching) {
@@ -195,7 +195,7 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
       }
 
       cv::rectangle(result, roi, color, cv::FILLED);
-      cv::rectangle(result, roi, cv::Scalar(255, 255, 255), 1);
+      //cv::rectangle(result, roi, cv::Scalar(255, 255, 255), 1);
     }
   }
 
