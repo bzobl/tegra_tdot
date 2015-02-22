@@ -26,6 +26,21 @@ struct Options {
   bool optical_flow = false;
 };
 
+void usage(std::string progname)
+{
+  std::cout << "usage:" << std::endl;
+            << progname << " [OPTIONS]" << std::endl
+            << std::endl
+            << "Options:" << std::endl
+            << " -c, --camera: Number of the camera to capture. E.g. 0 for /dev/video0" << std::endl
+            << " -w, --width: Width of the captured image" << std::endl
+            << " -h, --height: Height of the captured image" << std::endl
+            << " -f, --face-detect: Enable face detection and augmented reality" << std::endl
+            << " -o, --optical-flow: Enable optical flow analysis" << std::endl
+            << " -h, --help: Show this help" << std::endl
+            << std::endl;
+}
+
 std::ostream &operator<<(ostream &out, Options const &o)
 {
   out << "Camera:       " << o.cam_num << std::endl
@@ -295,7 +310,6 @@ void capture_loop(LiveStream &stream, Options const &opts)
     }
   }
 
-
   for (auto &t : workers) {
     t.join();
   }
@@ -336,8 +350,11 @@ int check_options(Options &opts, int const argc, char const * const *argv)
       opts.face_detect = true;
     } else if (arg == "-o" || arg == "--optical-flow") {
       opts.optical_flow = true;
+    } else if (arg == "-h" || arg == "--help") {
+      return -1;
     } else {
       std::cerr << "unknown option: " << arg << std::endl;
+      return -1;
     }
   }
 
@@ -347,7 +364,12 @@ int check_options(Options &opts, int const argc, char const * const *argv)
 int main(int argc, char **argv)
 {
   Options opts;
-  argc -= check_options(opts, argc - 1, argv++);
+  int nopts = check_options(opts, argc - 1, argv + 1);
+  if (nopts == -1) {
+    usage(argv[0]);
+    return 1;
+  }
+  argc -= nopts
 
   std::cout << "Options: " << std::endl << opts;
 
