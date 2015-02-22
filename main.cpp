@@ -296,6 +296,7 @@ int check_options(Options &opts, int const argc, char const * const *argv)
   argv++;
   for (; i < argc; i++, argv++) {
     std::string arg(*argv);
+    std::cout << "processing " << i << "/" << argc << ": " << arg << std::endl;
 
     if (arg.find_first_of("-") == std::string::npos) {
       break;
@@ -324,11 +325,6 @@ int check_options(Options &opts, int const argc, char const * const *argv)
 
 int main(int argc, char **argv)
 {
-  int cam = 0;
-  if (argc > 1) {
-    cam = atoi(argv[1]);
-  }
-
   Options opts;
   argc -= check_options(opts, argc - 1, argv++);
 
