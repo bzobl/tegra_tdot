@@ -26,6 +26,16 @@ struct Options {
   bool optical_flow = false;
 };
 
+std::ostream &operator<<(ostream &out, Options const &o)
+{
+  out << "Camera:       " << o.cam_num << std::endl
+      << "Width:        " << o.width << std::endl
+      << "Height:       " << o.height << std::endl
+      << "Facedetect:   " << std::boolalpha << o.face_detect << std::endl
+      << "Optical Flow: " << std::boolalpha << o.optical_flow << std::endl;
+  return out;
+}
+
 void usage(char const * const progname)
 {
   std::cout << "usage:" << std::endl
@@ -39,16 +49,6 @@ void usage(char const * const progname)
             << " -o, --optical-flow: Enable optical flow analysis" << std::endl
             << " --help: Show this help" << std::endl
             << std::endl;
-}
-
-std::ostream &operator<<(ostream &out, Options const &o)
-{
-  out << "Camera:       " << o.cam_num << std::endl
-      << "Width:        " << o.width << std::endl
-      << "Height:       " << o.height << std::endl
-      << "Facedetect:   " << std::boolalpha << o.face_detect << std::endl
-      << "Optical Flow: " << std::boolalpha << o.optical_flow << std::endl;
-  return out;
 }
 
 cv::Mat visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy)
@@ -321,7 +321,6 @@ int check_options(Options &opts, int const argc, char const * const *argv)
   int i = 1;
   for (; i < argc; i++) {
     std::string arg(argv[i]);
-    std::cout << "processing " << i << "/" << argc << ": " << arg << std::endl;
 
     if (arg.find_first_of("-") == std::string::npos) {
       break;
