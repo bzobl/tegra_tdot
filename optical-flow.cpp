@@ -5,6 +5,13 @@
 #include <iostream>
 #include <sstream>
 
+std::map<OpticalFlow::VisualizationType, std::string> OpticalFlow::VISUALIZATION_NAMES = 
+{
+  { VisualizationType::OPTICAL_FLOW_VISUALIZATION_FACES,  "Faces" },
+  { VisualizationType::OPTICAL_FLOW_VISUALIZATION_ARROWS, "Arrows" },
+  { VisualizationType::OPTICAL_FLOW_VISUALIZATION_BLOCKS, "Blocks" },
+};
+
 OpticalFlow::OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization)
                         : mStream(stream), mVisualizationImage(&visualization)
 {
