@@ -131,10 +131,12 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
                                         : (mStream.height() - y * y_pixels_per_block);
       cv::Rect roi(x * x_pixels_per_block, y * y_pixels_per_block, width, height);
 
-      int sum_approaching = std::count_if(directions(roi).begin(), directions(roi).end() [](uchar const &v)
-                                         {
-                                          return v == DIRECTION_APPROACHING;
-                                         });
+      int sum_approaching = std::count_if(directions(roi).begin<uchar>(),
+                                          directions(roi).end<uchar(),
+                                          [](uchar const &v)
+                                          {
+                                            return v == DIRECTION_APPROACHING;
+                                          });
 
     }
   }
