@@ -24,17 +24,17 @@ struct Options {
   int height = 480;
   bool face_detect = false;
   bool optical_flow = false;
-
-  std::ostream &operator<<(ostream &out)
-  {
-    out << "Camera:       " << cam_num << std::endl
-        << "Width:        " << width << std::endl
-        << "Height:       " << height << std::endl
-        << "Facedetect:   " << std::boolalpha << face_detect << std::endl
-        << "Optical Flow: " << std::boolalpha << optical_flow << std::endl;
-    return out;
-  }
 };
+
+std::ostream &operator<<(ostream &out, Options const &o)
+{
+  out << "Camera:       " << o.cam_num << std::endl
+      << "Width:        " << o.width << std::endl
+      << "Height:       " << o.height << std::endl
+      << "Facedetect:   " << std::boolalpha << o.face_detect << std::endl
+      << "Optical Flow: " << std::boolalpha << o.optical_flow << std::endl;
+  return out;
+}
 
 cv::Mat visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy)
 {
