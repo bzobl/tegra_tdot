@@ -12,6 +12,8 @@ OpticalFlow::OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization)
   mLastGpuImg = &mGpuImg2;
   load_new_frame();
 
+  mDirections = cv::Mat::zeros(mStream.height(), mStream.width(), CV_8UC1);;
+
   mFarneback.numLevels = 5;         // number of pyramid layers including initial
   mFarneback.pyrScale = 0.5;        // scale for pyramids. 0.5: next layer is twice smaller
   mFarneback.fastPyramids = false;
@@ -25,6 +27,33 @@ OpticalFlow::OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization)
 bool OpticalFlow::isReady()
 {
   return mStream.isOpened();
+}
+
+int OpticalFlow::get_direction_of_pixel(bool lower_half, cv::Point const &p1, cv::Point const & p2)
+{
+  double const diff_threshold = 1;
+
+  double diff = p1.y - p2.y;
+
+  if (lower_half) {
+  // lower half -> arrow pointing down when approaching
+    if (diff < (diff_threshold * -1)) {
+      return DIRECTION_APPROACHING;
+    } else if (diff > diff_threshold) {
+      return DIRECTION_DISTANCING;
+    } else {
+      return DIRECTION_UNDEFINED;
+    }
+  } else {
+  // upper half -> arrow pointing up when approaching
+    if (diff < (diff_threshold * -1)) {
+      return DIRECTION_DISTANCING;
+    } else if (diff > diff_threshold) {
+      return DIRECTION_APPROACHING;
+    } else {
+      return DIRECTION_UNDEFINED;
+    }
+  }
 }
 
 void OpticalFlow::load_new_frame()
@@ -54,13 +83,13 @@ void OpticalFlow::use_farneback(cv::Mat &flowx, cv::Mat &flowy,
   dl_time_ms = ((double) cv::getTickCount() - dl_start) / cv::getTickFrequency() * 1000;
 }
 
-cv::Mat OpticalFlow::visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy)
+template <typename TFun>
+void OpticalFlow::visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy,
+                                         TFun pixel_callback)
 {
   int const width = flowx.cols;
   int const height = flowx.rows;
   double const l_threshold = 2;
-  double const diff_threshold = 1;
-  cv::Mat result = cv::Mat::zeros(flowx.rows, flowy.cols, CV_8UC3);;
 
   for (int y = 0; y < height; y += 10) {
     for (int x = 0; x < width; x += 10) {
@@ -72,37 +101,50 @@ cv::Mat OpticalFlow::visualize_optical_flow(cv::Mat const &flowx, cv::Mat const 
       if ((l > l_threshold)) {
         cv::Point p(x, y);
         cv::Point p2(x + dx, y + dy);
-        cv::Scalar color;
-        double diff = p.y - p2.y;
+        int direction = get_direction_of_pixel((y > height/2), p, p2);
 
-        if (y > height/2) {
-        // lower half -> arrow pointing down when approaching
-          if (diff < (diff_threshold * -1)) {
-            // arrow pointing down --> approaching
-            color = cv::Scalar(0, 255, 0);
-          } else if (diff > diff_threshold) {
-            // arrow pointing up --> distancing
-            color = cv::Scalar(0, 0, 255);
-          } else {
-            color = cv::Scalar(255, 255, 255);
-          }
-        } else {
-        // upper half -> arrow ponting up when approaching
-          if (diff < (diff_threshold * -1)) {
-            // arrow pointing down --> distancing
-            color = cv::Scalar(0, 0, 255);
-          } else if (diff > diff_threshold) {
-            // arrow pointing up --> approaching
-            color = cv::Scalar(0, 255, 0);
-          } else {
-            color = cv::Scalar(255, 255, 255);
-          }
-        }
-
-        cv::arrowedLine(result, p, p2, color);
+        pixel_callback(p, p2, direction);
       }
     }
   }
+}
+
+cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat const &flowy)
+{
+  cv::Mat result = cv::Mat::zeros(flowx.rows, flowy.cols, CV_8UC3);;
+  cv::Mat directions = cv::Mat::zeros(flowx.rows, flowy.cols, CV_8UC1);;
+
+  visualize_optical_flow(flowx, flowy,
+                         [&directions](cv::Point const &p1, cv::Point const &p2, unsigned char direction)
+                         {
+                          directions.at<uchar>(p1.y, p1.x) = direction;
+                         });
+
+
+  return result;
+}
+
+cv::Mat OpticalFlow::visualize_optical_flow_arrows(cv::Mat const &flowx, cv::Mat const &flowy)
+{
+  cv::Mat result = cv::Mat::zeros(flowx.rows, flowy.cols, CV_8UC3);;
+
+  visualize_optical_flow(flowx, flowy,
+                         [&result](cv::Point const &p1, cv::Point const &p2, unsigned char direction)
+                         {
+                          cv::Scalar color;
+                          switch (direction) {
+                            case DIRECTION_APPROACHING:
+                              color = cv::Scalar(0, 255, 0);
+                              break;
+                            case DIRECTION_DISTANCING:
+                              color = cv::Scalar(0, 0, 255);
+                              break;
+                            default:
+                              color = cv::Scalar(255, 255, 255);
+                              break;
+                          }
+                          cv::arrowedLine(result, p1, p2, color);
+                         });
   return result;
 }
 
@@ -121,6 +163,9 @@ void OpticalFlow::operator()()
 
   double visualize_start = (double) cv::getTickCount();
   result = visualize_optical_flow(flowx, flowy);
+
+  
+
   double visualize_time_ms = ((double) cv::getTickCount() - visualize_start) / cv::getTickFrequency() * 1000;
 
   double total_time_ms = ((double) cv::getTickCount() - ul_start) / cv::getTickFrequency() * 1000;
