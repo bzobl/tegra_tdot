@@ -190,7 +190,7 @@ void capture_loop(LiveStream &stream, Options opts)
                         }
                        });
 
-  workers.emplace_back([&of, &exit, &af_wait]()
+  workers.emplace_back([&of, &exit, &of_wait]()
                        {
                         while(!exit) {
                           of_wait.wait();
