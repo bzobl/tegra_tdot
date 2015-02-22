@@ -369,7 +369,7 @@ int main(int argc, char **argv)
     usage(argv[0]);
     return 1;
   }
-  argc -= nopts
+  argc -= nopts;
 
   std::cout << "Options: " << std::endl << opts;
 
