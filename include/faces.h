@@ -32,7 +32,7 @@ public:
   void tick();
 
   std::mutex &getMutex();
-  std::vector<cv::Rect> &getFaces();
+  std::vector<cv::Rect> getFaces();
 
 };
 
