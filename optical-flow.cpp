@@ -118,6 +118,27 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
                           directions.at<uchar>(p1.y, p1.x) = direction;
                          });
 
+  int const n_xblocks = 15;
+  int const n_yblocks = 15;
+  int const x_pixels_per_block = mStream.width() / n_xblocks;
+  int const y_pixels_per_block = mStream.height() / n_yblocks;
+
+  for (int x = 0 ; x < n_xblocks; x++) {
+    for (int y = 0 ; y < n_yblocks; y++) {
+      int width = (x != n_xblocks - 1) ? x_pixels_per_block
+                                       : (mStream.width() - x * x_pixels_per_block);
+      int height = (y != n_yblocks - 1) ? y_pixels_per_block
+                                        : (mStream.height() - y * y_pixels_per_block);
+      cv::Rect roi(x * x_pixels_per_block, y * y_pixels_per_block, width, height);
+
+      int sum_approaching = std::count_if(directions(roi).begin(), directions(roi).end() [](uchar const &v)
+                                         {
+                                          return v == DIRECTION_APPROACHING;
+                                         });
+
+    }
+  }
+
 
   return result;
 }
@@ -160,10 +181,13 @@ void OpticalFlow::operator()()
   use_farneback(flowx, flowy, calc_time, dl_time);
 
   double visualize_start = (double) cv::getTickCount();
-  if (visualization_type == OPTICAL_FLOW_VISUALIZATION_ARROWS) {
-    result = visualize_optical_flow_arrows(flowx, flowy);
-  } else if (visualization_type == OPTICAL_FLOW_VISUALIZATION_BLOCKS) {
-    result = visualize_optical_flow_blocks(flowx, flowy);
+  switch (mVisualization) {
+    case OPTICAL_FLOW_VISUALIZATION_ARROWS:
+      result = visualize_optical_flow_arrows(flowx, flowy);
+      break;
+    case OPTICAL_FLOW_VISUALIZATION_BLOCKS:
+      result = visualize_optical_flow_blocks(flowx, flowy);
+      break;
   }
   double visualize_time_ms = ((double) cv::getTickCount() - visualize_start) / cv::getTickFrequency() * 1000;
 
@@ -195,4 +219,13 @@ void OpticalFlow::operator()()
   }
 
   mVisualizationImage->update(result);
+}
+
+void OpticalFlow::toggle_visualization()
+{
+  if (mVisualization == OpticalFlow::OPTICAL_FLOW_VISUALIZATION_ARROWS) {
+    mVisualization = OpticalFlow::OPTICAL_FLOW_VISUALIZATION_BLOCKS;
+  } else {
+    mVisualization = OpticalFlow::OPTICAL_FLOW_VISUALIZATION_ARROWS;
+  };
 }

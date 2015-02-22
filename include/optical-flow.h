@@ -29,6 +29,13 @@ private:
   void load_new_frame();
   void use_farneback(cv::Mat &flowx, cv::Mat &flowy, double &calc_time, double &dl_time);
 
+  enum VisualizationType {
+    OPTICAL_FLOW_VISUALIZATION_BLOCKS = 1,
+    OPTICAL_FLOW_VISUALIZATION_ARROWS = 2,
+  };
+
+  VisualizationType mVisualization = OPTICAL_FLOW_VISUALIZATION_ARROWS;
+
   template <typename TFun>
   void visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy, TFun pixel_callback);
   cv::Mat visualize_optical_flow_arrows(cv::Mat const &flowx, cv::Mat const &flowy);
@@ -40,12 +47,7 @@ public:
   bool isReady();
   void operator()();
 
-  enum {
-    OPTICAL_FLOW_VISUALIZATION_BLOCKS = 1,
-    OPTICAL_FLOW_VISUALIZATION_ARROWS = 2,
-  } VisualizationType;
-
-  int visualization_type = OPTICAL_FLOW_VISUALIZATION_ARROWS;
+  void toggle_visualization();
 };
 
 #endif

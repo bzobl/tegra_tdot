@@ -121,11 +121,7 @@ void capture_loop(LiveStream &stream, Options const &opts)
         exit = true;
         break;
       case 'v':
-        if (of.visualization_type == OpticalFlow::OPTICAL_FLOW_VISUALIZATION_ARROWS) {
-          of.visualization_type = OpticalFlow::OPTICAL_FLOW_VISUALIZATION_BLOCKS;
-        } else {
-          of.visualization_type = OpticalFlow::OPTICAL_FLOW_VISUALIZATION_ARROWS;
-        };
+        of.toggle_visualization();
         break;
       default:
         break;
