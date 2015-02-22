@@ -318,7 +318,7 @@ void capture_loop(LiveStream &stream, Options const &opts)
 // returns processed arguments
 int check_options(Options &opts, int const argc, char const * const *argv)
 {
-  int i = 0;
+  int i = 1;
   for (; i < argc; i++) {
     std::string arg(argv[i]);
     std::cout << "processing " << i << "/" << argc << ": " << arg << std::endl;
