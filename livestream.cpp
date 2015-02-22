@@ -111,14 +111,16 @@ void LiveStream::nextFrame(cv::Mat &frame)
   mCurrentFrame.copyTo(frame);
 }
 
-std::mutex &LiveStream::getOverlayMutex()
+std::recursive_mutex &LiveStream::getOverlayMutex()
 {
   return mOverlayMutex;
 }
 
 void LiveStream::resetOverlay()
 {
+  std::unique_lock<std::recursive_mutex> l(mOverlayMutex);
   mOverlayAlpha = cv::Mat::zeros(mStreamHeight, mStreamWidth, CV_8UC1);
+  mOverlayTTL = DEFAULT_TTL;
 }
 
 void LiveStream::addImageToOverlay(AlphaImage const &image, int width, int x, int y)
@@ -132,7 +134,7 @@ void LiveStream::applyOverlay(cv::Mat &image)
   assert(image.cols == mStreamWidth);
   assert(image.rows == mStreamHeight);
 
-  std::unique_lock<std::mutex> l(mOverlayMutex);
+  std::unique_lock<std::recursive_mutex> l(mOverlayMutex);
 
   for (int w = 0; w < mStreamWidth; w++) {
     for (int h = 0; h < mStreamHeight; h++) {
@@ -140,5 +142,10 @@ void LiveStream::applyOverlay(cv::Mat &image)
         image.at<cv::Vec3b>(h, w) = mOverlay.at<cv::Vec3b>(h, w);
       }
     }
+  }
+
+  mOverlayTTL--;
+  if (mOverlayTTL <= 0) {
+    resetOverlay();
   }
 }

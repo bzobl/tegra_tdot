@@ -18,8 +18,11 @@ private:
   cv::Mat mOverlay;
   cv::Mat mOverlayAlpha;
 
+  int const DEFAULT_TTL = 30;
+  int mOverlayTTL;
+
   mutable std::mutex mFrameMutex;
-  mutable std::mutex mOverlayMutex;
+  mutable std::recursive_mutex mOverlayMutex;
 
   bool openCamera(int num, int width, int height);
   void getCurrentFrame();
@@ -38,7 +41,7 @@ public:
   void getFrame(cv::Mat &frame);
   void nextFrame(cv::Mat &frame);
 
-  std::mutex &getOverlayMutex();
+  std::recursive_mutex &getOverlayMutex();
   void resetOverlay();
   void addImageToOverlay(AlphaImage const &image, int width, int x, int y);
   void applyOverlay(cv::Mat &image);

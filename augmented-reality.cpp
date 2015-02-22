@@ -20,7 +20,7 @@ void AugmentedReality::operator()()
   assert(ready());
 
   // for the duration of resetting the overlay no other thread must use the overlay
-  std::unique_lock<std::mutex> sl(mStream.getOverlayMutex(), std::defer_lock);
+  std::unique_lock<std::recursive_mutex> sl(mStream.getOverlayMutex(), std::defer_lock);
   std::unique_lock<std::mutex> fl(mFaces->getMutex(), std::defer_lock);
   lock(sl, fl);
 
