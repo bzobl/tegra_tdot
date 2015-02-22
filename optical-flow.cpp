@@ -217,9 +217,6 @@ cv::Mat OpticalFlow::visualize_optical_flow_faces(cv::Mat const &flowx, cv::Mat 
   visualize_optical_flow(flowx, flowy,
                          [&directions](cv::Point const &p1, cv::Point const &p2, unsigned char direction)
                          {
-                          if (direction == DIRECTION_APPROACHING || direction == DIRECTION_DISTANCING) {
-                            std::cout << "directions at " << p1.x << "/" <<  p1.y << std::endl;
-                          }
                           directions.at<uchar>(p1.y, p1.x) = direction;
                          });
 
@@ -234,10 +231,6 @@ cv::Mat OpticalFlow::visualize_optical_flow_faces(cv::Mat const &flowx, cv::Mat 
       int sum_distancing = std::count_if(roi.begin<uchar>(), roi.end<uchar>(),
                                          [](unsigned char v) { return v == DIRECTION_DISTANCING; });
 
-      std::cout << "block " << roi << "[" << sum_approaching
-                                   << "|" << sum_distancing
-                                   << "] ";
-
       int block_direction = DIRECTION_UNDEFINED;
       int const threshold = 30;
       if ((sum_approaching > sum_distancing) && (sum_approaching > threshold)) {
@@ -249,11 +242,9 @@ cv::Mat OpticalFlow::visualize_optical_flow_faces(cv::Mat const &flowx, cv::Mat 
       cv::Scalar color;
       switch (block_direction) {
         case DIRECTION_APPROACHING:
-          std::cout << "face is approaching" << std::endl;
           color = cv::Scalar(0, 255, 0);
           break;
         case DIRECTION_DISTANCING:
-          std::cout << "face is distancing" << std::endl;
           color = cv::Scalar(0, 0, 255);
           break;
         default:
