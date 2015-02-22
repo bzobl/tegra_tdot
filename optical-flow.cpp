@@ -12,7 +12,7 @@ OpticalFlow::OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization)
   mLastGpuImg = &mGpuImg2;
   load_new_frame();
 
-  mFarneback.numLevels = 10;         // number of pyramid layers including initial
+  mFarneback.numLevels = 5;         // number of pyramid layers including initial
   mFarneback.pyrScale = 0.8;        // scale for pyramids. 0.5: next layer is twice smaller
   mFarneback.fastPyramids = false;
   mFarneback.winSize = 13;          // averaging window size
