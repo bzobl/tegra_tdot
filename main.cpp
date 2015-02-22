@@ -242,9 +242,11 @@ void capture_loop(LiveStream &stream, Options opts)
         break;
       case 'f':
         face_wait.toggle();
+        face_wait.notify();
         std::cout << "FaceDetection: " << (face_wait ? "enabled" : "disabled") << std::endl;
         break;
       case 'a':
+        stream.resetOverlay();
         opts.augmented_reality = !opts.augmented_reality;
         std::cout << "AugmentedReality: " << (opts.augmented_reality ? "enabled" : "disabled") << std::endl;
         break;
