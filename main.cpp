@@ -307,16 +307,19 @@ int check_options(Options &opts, int const argc, char const * const *argv)
         std::cerr << "missing value for " << arg << std::endl;
       }
       opts.width = atoi(argv[i + 1]);
+      i++;
     } else if (arg == "-h" || arg == "--height") {
       if ((i + 1) >= argc) {
         std::cerr << "missing value for " << arg << std::endl;
       }
       opts.height = atoi(argv[i + 1]);
+      i++;
     } else if (arg == "-c" || arg == "--camera") {
       if ((i + 1) >= argc) {
         std::cerr << "missing value for " << arg << std::endl;
       }
       opts.cam_num = atoi(argv[i + 1]);
+      i++;
     } else if (arg == "-f" || arg == "--face-detect") {
       opts.face_detect = true;
     } else if (arg == "-o" || arg == "--optical-flow") {
