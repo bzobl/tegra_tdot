@@ -319,7 +319,6 @@ void capture_loop(LiveStream &stream, Options const &opts)
 int check_options(Options &opts, int const argc, char const * const *argv)
 {
   int i = 0;
-  argv++;
   for (; i < argc; i++) {
     std::string arg(argv[i]);
     std::cout << "processing " << i << "/" << argc << ": " << arg << std::endl;
@@ -373,9 +372,6 @@ int main(int argc, char **argv)
 
   std::cout << "Options: " << std::endl << opts;
 
-  //LiveStream live(cam);
-  //LiveStream live(cam, 1920, 1080);
-  //LiveStream live(cam, 1280, 720);
   LiveStream live(opts.cam_num, opts.width, opts.height);
   if (!live.isOpened()) {
     cerr << "Error opening camera " << opts.cam_num << endl;
