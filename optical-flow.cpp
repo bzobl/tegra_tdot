@@ -15,8 +15,8 @@ OpticalFlow::OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization)
   mFarneback.numLevels = 2;         // number of pyramid layers including initial
   mFarneback.pyrScale = 0.5;        // scale for pyramids. 0.5: next layer is twice smaller
   mFarneback.fastPyramids = true;
-  mFarneback.winSize = 15;          // averaging window size
-  mFarneback.numIters = 3;         // iterations per pyramid level
+  mFarneback.winSize = 13;          // averaging window size
+  mFarneback.numIters = 1;         // iterations per pyramid level
   mFarneback.polyN = 5;             // size of pixel neighborhood. usally 5 or 7
   mFarneback.polySigma = 1.1;       // standard deviation for gaussian usually 1.1 or 1.5
   mFarneback.flags = 0;
