@@ -2,6 +2,7 @@
 #define AUGMENTED_REALITY_H_INCLUDED
 
 #include <atomic>
+#include <cassert>
 
 #include "opencv2/cuda.hpp"
 #include "opencv2/cudaoptflow.hpp"
