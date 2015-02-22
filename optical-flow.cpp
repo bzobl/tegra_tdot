@@ -104,11 +104,10 @@ void OpticalFlow::operator()()
   double total_time_ms = ((double) cv::getTickCount() - ul_start) / cv::getTickFrequency() * 1000;
 
   {
-    std::stringstream ss;
     cv::Point pos(50, 50);
     int font = cv::FONT_HERSHEY_PLAIN;
     cv::Scalar color(255, 255, 255);
-    double scale = 1;
+    double scale = 1.2;
 
     struct {
       std::string text;
@@ -122,12 +121,11 @@ void OpticalFlow::operator()()
     };
 
     for (auto t : times) {
+      std::stringstream ss;
       ss << t.text << *t.time << "ms";
       cv::putText(result, ss.str(), pos, font, scale, color);
-      ss.clear();
       pos.y += 10;
     }
-    std::cout << std::endl;
   }
 
   mVisualizationImage->update(result);
