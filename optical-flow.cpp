@@ -5,7 +5,7 @@
 #include <iostream>
 #include <sstream>
 
-std::map<OpticalFlow::VisualizationType, std::string> OpticalFlow::VISUALIZATION_NAMES = 
+std::map<OpticalFlow::VisualizationType, std::string> OpticalFlow::mVisualizationNames = 
 {
   { VisualizationType::OPTICAL_FLOW_VISUALIZATION_FACES,  "Faces" },
   { VisualizationType::OPTICAL_FLOW_VISUALIZATION_ARROWS, "Arrows" },
@@ -360,7 +360,7 @@ void OpticalFlow::toggle_visualization()
 
   mVisualization = (VisualizationType)((mVisualization + 1) % OPTICAL_FLOW_VISUALIZATION_LAST_ENTRY);
 
-  std::cout << "Optical Flow Visualization: " << VISUALIZATION_NAMES[mVisualization] << std::endl;
+  std::cout << "Optical Flow Visualization: " << mVisualizationNames[mVisualization] << std::endl;
 
   if (mVisualization == OpticalFlow::OPTICAL_FLOW_VISUALIZATION_ARROWS) {
     mVisualization = OpticalFlow::OPTICAL_FLOW_VISUALIZATION_BLOCKS;
