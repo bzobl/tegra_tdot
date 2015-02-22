@@ -12,8 +12,6 @@ OpticalFlow::OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization)
   mLastGpuImg = &mGpuImg2;
   load_new_frame();
 
-  mDirections = cv::Mat::zeros(mStream.height(), mStream.width(), CV_8UC1);;
-
   mFarneback.numLevels = 5;         // number of pyramid layers including initial
   mFarneback.pyrScale = 0.5;        // scale for pyramids. 0.5: next layer is twice smaller
   mFarneback.fastPyramids = false;
