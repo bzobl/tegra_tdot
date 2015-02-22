@@ -93,12 +93,27 @@ void OpticalFlow::operator()()
   double total_time_ms = ((double) cv::getTickCount() - ul_start) / cv::getTickFrequency() * 1000;
 
   std::stringstream ss;
-  ss << "upload: " << ul_time_ms << "ms" << std::endl
-     << "calc:   " << calc_time << "ms" << std::endl
-     << "download: " << dl_time << "ms" << std::endl
-     << "visualize: " << visualize_time_ms << "ms" << std::endl
-     << "total: " << total_time_ms << "ms | FPS: " << 1000/total_time_ms << std::endl;
+  cv::Point pos(50, 50);
+  cv::fontFace font = cv::FONT_HERSHEY_PLAIN;
+  cv::Scalar color(255, 255, 255);
+  double scale = 0.5;
 
-  cv::putText(result, ss.str(), cv::Point(50, 50), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(255, 255, 255));
+  struct {
+    std::string text;
+    double *time;
+  } times[] = {
+    { "upload:    ", &ul_time_ms },
+    { "calc:      ", &calc_time },
+    { "download:  ", &dl_time },
+    { "visualize: ", &visualize_time_ms },
+    { "total:     ", &total_time_ms },
+  };
+
+  for (auto t : times) {
+    ss << t.text << *t.time << "ms";
+    cv::putText(result, ss.str(), pos, font, scale, color);
+    pos.y += 10;
+  }
+
   mVisualizationImage.update(result);
 }
