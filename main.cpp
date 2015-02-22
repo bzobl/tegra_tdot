@@ -294,8 +294,8 @@ int check_options(Options &opts, int const argc, char const * const *argv)
 {
   int i = 0;
   argv++;
-  for (; i < argc; i++, argv++) {
-    std::string arg(*argv);
+  for (; i < argc; i++) {
+    std::string arg(argv[i]);
     std::cout << "processing " << i << "/" << argc << ": " << arg << std::endl;
 
     if (arg.find_first_of("-") == std::string::npos) {
@@ -303,14 +303,20 @@ int check_options(Options &opts, int const argc, char const * const *argv)
     }
 
     if (arg == "-w" || arg == "--width") {
-      argv++;
-      opts.width = atoi(*argv);
+      if ((i + 1) >= argc) {
+        std::cerr << "missing value for " << arg << std::endl;
+      }
+      opts.width = atoi(argv[i + 1]);
     } else if (arg == "-h" || arg == "--height") {
-      argv++;
-      opts.height = atoi(*argv);
+      if ((i + 1) >= argc) {
+        std::cerr << "missing value for " << arg << std::endl;
+      }
+      opts.height = atoi(argv[i + 1]);
     } else if (arg == "-c" || arg == "--camera") {
-      argv++;
-      opts.cam_num = atoi(*argv);
+      if ((i + 1) >= argc) {
+        std::cerr << "missing value for " << arg << std::endl;
+      }
+      opts.cam_num = atoi(argv[i + 1]);
     } else if (arg == "-f" || arg == "--face-detect") {
       opts.face_detect = true;
     } else if (arg == "-o" || arg == "--optical-flow") {
