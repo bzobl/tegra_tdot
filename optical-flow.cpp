@@ -6,18 +6,27 @@
 OpticalFlow::OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization)
                         : mStream(stream), mVisualizationImage(visualization)
 {
-  cv::Mat frame;
-  mStream.getFrame(frame);
-  mGpuImg1.upload(frame);
-  mGpuImg2.upload(frame);
-
   mNowGpuImg = &mGpuImg1;
   mLastGpuImg = &mGpuImg2;
+
+  load_new_frame();
 }
 
 bool OpticalFlow::isReady()
 {
   return mStream.isOpened();
+}
+
+void OpticalFlow::load_new_frame()
+{
+  cv::Mat image;
+
+  // swap pointers to avoid reallocating memory on gpu
+  std::swap(mNowGpuImg, mLastGpuImg);
+
+  mStream.getFrame(image);
+  cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
+  mNowGpuImg->upload(image);
 }
 
 void OpticalFlow::use_farneback(cv::Mat &flowx, cv::Mat &flowy,
@@ -67,13 +76,11 @@ void OpticalFlow::visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &fl
 void OpticalFlow::operator()()
 {
   assert(isReady());
-  cv::Mat image, flowx, flowy;
+  cv::Mat flowx, flowy;
   cv::Mat result(mStream.height(), mStream.width(), CV_8UC3);
 
   double ul_start = (double) cv::getTickCount();
-  mStream.getFrame(image);
-  cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
-  mNowGpuImg->upload(image);
+  load_new_frame();
   double ul_time_ms = ((double) cv::getTickCount() - ul_start) / cv::getTickFrequency() * 1000;
 
   double calc_time, dl_time;
@@ -82,9 +89,6 @@ void OpticalFlow::operator()()
   double visualize_start = (double) cv::getTickCount();
   visualize_optical_flow(flowx, flowy, result);
   double visualize_time_ms = ((double) cv::getTickCount() - visualize_start) / cv::getTickFrequency() * 1000;
-
-  // swap pointers to avoid reallocating memory on gpu
-  std::swap(mNowGpuImg, mLastGpuImg);
 
   double total_time_ms = ((double) cv::getTickCount() - ul_start) / cv::getTickFrequency() * 1000;
 
@@ -96,6 +100,5 @@ void OpticalFlow::operator()()
      << "total: " << total_time_ms << "ms | FPS: " << 1000/total_time_ms << std::endl;
 
   cv::putText(result, ss.str(), cv::Point(50, 50), cv::FONT_HERSHEY_DUPLEX, 1, cv::Scalar(255, 255, 255));
-  //cv::imshow("OptFlow", result);
   mVisualizationImage.update(result);
 }
