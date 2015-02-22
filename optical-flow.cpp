@@ -202,6 +202,66 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
   return result;
 }
 
+cv::Mat OpticalFlow::visualize_optical_flow_faces(cv::Mat const &flowx, cv::Mat const &flowy)
+{
+  cv::Mat result = cv::Mat::zeros(flowx.rows, flowy.cols, CV_8UC3);;
+  cv::Mat directions = cv::Mat::zeros(flowx.rows, flowy.cols, CV_8UC1);;
+
+  if (mFaces == nullptr)
+  {
+    std::cerr << "faces not set" << std::endl;
+    return result; 
+  }
+
+  visualize_optical_flow(flowx, flowy,
+                         [&directions](cv::Point const &p1, cv::Point const &p2, unsigned char direction)
+                         {
+                          directions.at<uchar>(p1.y, p1.x) = direction;
+                         });
+
+  {
+    std::unique_lock<std::mutex>(mFaces->getMutex());
+
+    for (cv::Rect face : mFaces->getFaces()) {
+      cv::Mat roi = directions(face);
+
+      int sum_approaching = std::count_if(roi.begin<uchar>(), roi.end<uchar>(),
+                                          [](unsigned char v) { return v == DIRECTION_APPROACHING; });
+      int sum_distancing = std::count_if(roi.begin<uchar>(), roi.end<uchar>(),
+                                         [](unsigned char v) { return v == DIRECTION_DISTANCING; });
+
+      std::cout << "block " << roi << "[" << sum_approaching
+                                   << "|" << sum_distancing
+                                   << "]" << std::endl;
+
+      int block_direction = DIRECTION_UNDEFINED;
+      int const threshold = 1;
+      if ((sum_approaching > sum_distancing) && (sum_approaching > threshold)) {
+          block_direction = DIRECTION_APPROACHING;
+      } else if (sum_distancing > threshold) {
+          block_direction = DIRECTION_DISTANCING;
+      }
+
+      cv::Scalar color;
+      switch (block_direction) {
+        case DIRECTION_APPROACHING:
+          color = cv::Scalar(0, 255, 0);
+          break;
+        case DIRECTION_DISTANCING:
+          color = cv::Scalar(0, 0, 255);
+          break;
+        default:
+          color = cv::Scalar(0, 0, 0);
+          break;
+      }
+
+        cv::rectangle(result, roi, color, cv::FILLED);
+      }
+    }
+
+  return result;
+}
+
 cv::Mat OpticalFlow::visualize_optical_flow_arrows(cv::Mat const &flowx, cv::Mat const &flowy)
 {
   cv::Mat result = cv::Mat::zeros(flowx.rows, flowy.cols, CV_8UC3);;
@@ -247,6 +307,12 @@ void OpticalFlow::operator()()
     case OPTICAL_FLOW_VISUALIZATION_BLOCKS:
       result = visualize_optical_flow_blocks(flowx, flowy);
       break;
+    case OPTICAL_FLOW_VISUALIZATION_FACES:
+      result = visualize_optical_flow_faces(flowx, flowy);
+      break;
+    default:
+      assert(false);
+      break;
   }
   double visualize_time_ms = ((double) cv::getTickCount() - visualize_start) / cv::getTickFrequency() * 1000;
 
@@ -280,11 +346,18 @@ void OpticalFlow::operator()()
   mVisualizationImage->update(result);
 }
 
+void OpticalFlow::setFaces(Faces *faces)
+{
+  mFaces = faces;
+}
+
 void OpticalFlow::toggle_visualization()
 {
   std::cout << "toggling visualization" << std::endl;
   if (mVisualization == OpticalFlow::OPTICAL_FLOW_VISUALIZATION_ARROWS) {
     mVisualization = OpticalFlow::OPTICAL_FLOW_VISUALIZATION_BLOCKS;
+  } else if (mVisualization == OpticalFlow::OPTICAL_FLOW_VISUALIZATION_BLOCKS) {
+    mVisualization = OpticalFlow::OPTICAL_FLOW_VISUALIZATION_FACES;
   } else {
     mVisualization = OpticalFlow::OPTICAL_FLOW_VISUALIZATION_ARROWS;
   };

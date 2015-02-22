@@ -4,6 +4,7 @@
 #include "opencv2/cuda.hpp"
 #include "opencv2/cudaoptflow.hpp"
 
+#include "faces.h"
 #include "livestream.h"
 #include "thread-safe-mat.h"
 
@@ -12,6 +13,7 @@ private:
   LiveStream &mStream;
 
   ThreadSafeMat *mVisualizationImage;
+  Faces *mFaces = nullptr;
 
   cv::cuda::FarnebackOpticalFlow mFarneback;
 
@@ -32,6 +34,7 @@ private:
   enum VisualizationType {
     OPTICAL_FLOW_VISUALIZATION_BLOCKS = 1,
     OPTICAL_FLOW_VISUALIZATION_ARROWS = 2,
+    OPTICAL_FLOW_VISUALIZATION_FACES = 3,
   };
 
   VisualizationType mVisualization = OPTICAL_FLOW_VISUALIZATION_ARROWS;
@@ -40,6 +43,7 @@ private:
   void visualize_optical_flow(cv::Mat const &flowx, cv::Mat const &flowy, TFun pixel_callback);
   cv::Mat visualize_optical_flow_arrows(cv::Mat const &flowx, cv::Mat const &flowy);
   cv::Mat visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat const &flowy);
+  cv::Mat visualize_optical_flow_faces(cv::Mat const &flowx, cv::Mat const &flowy);
 
 public:
   OpticalFlow(LiveStream &stream, ThreadSafeMat &visualization);
@@ -47,6 +51,7 @@ public:
   bool isReady();
   void operator()();
 
+  void setFaces(Faces *faces);
   void toggle_visualization();
 };
 
