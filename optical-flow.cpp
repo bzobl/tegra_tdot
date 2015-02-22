@@ -150,10 +150,12 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
                                         {
                                           return (v != DIRECTION_APPROACHING) && (v != DIRECTION_DISTANCING);
                                         });
+      /*
       std::cout << "block " << roi << "[" << sum_approaching
                                    << "|" << sum_distancing
                                    << "|" << sum_undefined
                                    << "]" << std::endl;
+                                   */
 
       int block_direction = DIRECTION_UNDEFINED;
       int const threshold = 1;
@@ -182,11 +184,11 @@ cv::Mat OpticalFlow::visualize_optical_flow_blocks(cv::Mat const &flowx, cv::Mat
       cv::Scalar color;
       switch (block_direction) {
         case DIRECTION_APPROACHING:
-          std::cout << "block " << x << "/" << y << " APPROACHING" << std::endl;
+          //std::cout << "block " << x << "/" << y << " APPROACHING" << std::endl;
           color = cv::Scalar(0, 255, 0);
           break;
         case DIRECTION_DISTANCING:
-          std::cout << "block " << x << "/" << y << " DISTANCING" << std::endl;
+          //std::cout << "block " << x << "/" << y << " DISTANCING" << std::endl;
           color = cv::Scalar(0, 0, 255);
           break;
         default:
@@ -258,6 +260,7 @@ cv::Mat OpticalFlow::visualize_optical_flow_faces(cv::Mat const &flowx, cv::Mat 
       }
 
       cv::rectangle(result, face, color, cv::FILLED);
+      cv::rectangle(result, face, cv::Scalar(255, 255, 255), 1);
     }
   }
 
