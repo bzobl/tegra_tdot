@@ -28,7 +28,7 @@ struct Options {
 
 void usage(std::string progname)
 {
-  std::cout << "usage:" << std::endl;
+  std::cout << "usage:" << std::endl
             << progname << " [OPTIONS]" << std::endl
             << std::endl
             << "Options:" << std::endl
