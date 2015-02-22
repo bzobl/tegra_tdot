@@ -26,7 +26,7 @@ struct Options {
   bool optical_flow = false;
 };
 
-void usage(std::string progname)
+void usage(char const * const progname)
 {
   std::cout << "usage:" << std::endl
             << progname << " [OPTIONS]" << std::endl
