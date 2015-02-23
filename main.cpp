@@ -187,35 +187,41 @@ void capture_loop(LiveStream &stream, Options opts)
 
   std::cout << "PID main thread: " << syscall(SYS_gettid) << std::endl;
 
-  workers.emplace_back([&faces, &exit, &face_wait, &faces_done]()
-                       {
-                        std::cout << "PID face detection thread: " << syscall(SYS_gettid) << std::endl;
-                        while(!exit) {
-                          face_wait.wait();
-                          faces.detect();
-                          faces_done.set();
-                        }
-                       });
+  if (opts.face_detect) {
+    workers.emplace_back([&faces, &exit, &face_wait, &faces_done]()
+                         {
+                          std::cout << "PID face detection thread: " << syscall(SYS_gettid) << std::endl;
+                          while(!exit) {
+                            face_wait.wait();
+                            faces.detect();
+                            faces_done.set();
+                          }
+                         });
+  }
 
-  workers.emplace_back([&ar, &exit, &ar_wait, &faces_done]()
-                       {
-                        std::cout << "PID augmented reality thread: " << syscall(SYS_gettid) << std::endl;
-                        while(!exit) {
-                          ar_wait.wait();
-                          faces_done.wait();
-                          faces_done.clear();
-                          ar();
-                        }
-                       });
+  if (opts.augmented_reality) {
+    workers.emplace_back([&ar, &exit, &ar_wait, &faces_done]()
+                         {
+                          std::cout << "PID augmented reality thread: " << syscall(SYS_gettid) << std::endl;
+                          while(!exit) {
+                            ar_wait.wait();
+                            faces_done.wait();
+                            faces_done.clear();
+                            ar();
+                          }
+                         });
+  }
 
-  workers.emplace_back([&of, &exit, &of_wait]()
-                       {
-                        std::cout << "PID optical flow thread: " << syscall(SYS_gettid) << std::endl;
-                        while(!exit) {
-                          of_wait.wait();
-                          of();
-                        }
-                       });
+  if (opts.optical_flow) {
+    workers.emplace_back([&of, &exit, &of_wait]()
+                         {
+                          std::cout << "PID optical flow thread: " << syscall(SYS_gettid) << std::endl;
+                          while(!exit) {
+                            of_wait.wait();
+                            of();
+                          }
+                         });
+  }
 
   const std::string live_feed_window = "Live Feed";
   const std::string opt_flow_window = "Optical Flow";
