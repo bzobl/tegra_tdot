@@ -32,7 +32,7 @@ public:
   Faces(LiveStream &stream, std::string const &face_cascade);
 
   bool isReady();
-  bool detect();
+  void detect();
 
   void tick();
 

@@ -32,7 +32,7 @@ bool Faces::isReady()
   return mStream.isOpened() && !mFaceCascade.empty();
 }
 
-bool Faces::detect()
+void Faces::detect()
 {
   assert(isReady());
 
@@ -49,7 +49,10 @@ bool Faces::detect()
   cv::cvtColor(frame, frame, cv::COLOR_BGR2GRAY);
   d_frame.upload(frame);
 
-  int n_detected = mFaceCascade.detectMultiScale(d_frame, d_faces, 1.2, 8, cv::Size(40, 40));
+  double scale_factor = 1.2;
+  int min_neighbours = 4;
+  cv::Size min_size(20, 20);
+  int n_detected = mFaceCascade.detectMultiScale(d_frame, d_faces, scale_factor, min_neighbours, min_size);
 
   d_faces.colRange(0, n_detected).download(h_faces);
   cv::Rect *prect = h_faces.ptr<cv::Rect>();

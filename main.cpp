@@ -241,6 +241,7 @@ void capture_loop(LiveStream &stream, Options opts)
       case 'o':
         of_wait.toggle();
         std::cout << "OpticalFlow: " << (of_wait ? "enabled" : "disabled") << std::endl;
+        of_visualize.update(cv::Mat::zeros(stream.height(), stream.width(), CV_8UC3));
         break;
       case 'f':
         face_wait.toggle();
