@@ -282,9 +282,9 @@ int main(int argc, char **argv)
   std::cout << "Options: " << std::endl << opts;
 
   int gpu = 0;
-  cv::gpu::setDevice(gpu);
-  cv::gpu::resetDevice();
-  cv::gpu::DeviceInfo info;
+  cv::cuda::setDevice(gpu);
+  cv::cuda::resetDevice();
+  cv::cuda::DeviceInfo info;
   std::cout << "using GPU" << gpu << ": "
             << info.freeMemory() / 1024 / 1024 << " / "
             << info.totalMemory() / 1024 / 1024 << " MB in use" << std::endl;
