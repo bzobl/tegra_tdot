@@ -75,12 +75,10 @@ void LiveStream::getCurrentFrame()
   mCamera.read(yuv);
   cv::cvtColor(yuv, mCurrentFrame, cv::COLOR_YUV2BGR);
   */
-  /*
   cv::Mat jpg;
   mCamera.read(jpg);
   mCurrentFrame = cv::imdecode(jpg, 1);
-  */
-  mCamera.read(mCurrentFrame);
+  //mCamera.read(mCurrentFrame);
 }
 
 bool LiveStream::isOpened() const
