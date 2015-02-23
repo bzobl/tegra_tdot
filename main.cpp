@@ -4,6 +4,7 @@
 #include <thread>
 #include <chrono>
 #include <atomic>
+#include <unistd.h>
 
 #include "opencv2/objdetect.hpp"
 #include "opencv2/highgui.hpp"
@@ -174,8 +175,11 @@ void capture_loop(LiveStream &stream, Options opts)
   ConditionalWait of_wait(exit, opts.face_detect);
   std::vector<std::thread> workers;
 
+  std::cout << "PID main thread: " << getpid() << std::endl;
+
   workers.emplace_back([&faces, &exit, &face_wait]()
                        {
+                        std::cout << "PID face detection thread: " << getpid() << std::endl;
                         while(!exit) {
                           face_wait.wait();
                           faces.detect();
@@ -184,6 +188,7 @@ void capture_loop(LiveStream &stream, Options opts)
 
   workers.emplace_back([&ar, &exit, &ar_wait]()
                        {
+                        std::cout << "PID augmented reality thread: " << getpid() << std::endl;
                         while(!exit) {
                           ar_wait.wait();
                           ar();
@@ -192,6 +197,7 @@ void capture_loop(LiveStream &stream, Options opts)
 
   workers.emplace_back([&of, &exit, &of_wait]()
                        {
+                        std::cout << "PID optical flow thread: " << getpid() << std::endl;
                         while(!exit) {
                           of_wait.wait();
                           of();
