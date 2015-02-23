@@ -245,7 +245,7 @@ void capture_loop(LiveStream &stream, Options opts)
       std::stringstream ss;
       ss << "Time: " << t*1000 << "ms | FPS: " << 1/t;
 
-      cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
+      cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(128, 255, 255));
 
       cv::imshow(live_feed_window, image);
     }
