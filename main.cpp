@@ -175,11 +175,11 @@ void capture_loop(LiveStream &stream, Options opts)
   ConditionalWait of_wait(exit, opts.optical_flow);
   std::vector<std::thread> workers;
 
-  std::cout << "PID main thread: " << getpid() << std::endl;
+  std::cout << "PID main thread: " << gettid() << std::endl;
 
   workers.emplace_back([&faces, &exit, &face_wait]()
                        {
-                        std::cout << "PID face detection thread: " << getpid() << std::endl;
+                        std::cout << "PID face detection thread: " << gettid() << std::endl;
                         while(!exit) {
                           face_wait.wait();
                           faces.detect();
@@ -188,7 +188,7 @@ void capture_loop(LiveStream &stream, Options opts)
 
   workers.emplace_back([&ar, &exit, &ar_wait]()
                        {
-                        std::cout << "PID augmented reality thread: " << getpid() << std::endl;
+                        std::cout << "PID augmented reality thread: " << gettid() << std::endl;
                         while(!exit) {
                           ar_wait.wait();
                           ar();
@@ -197,7 +197,7 @@ void capture_loop(LiveStream &stream, Options opts)
 
   workers.emplace_back([&of, &exit, &of_wait]()
                        {
-                        std::cout << "PID optical flow thread: " << getpid() << std::endl;
+                        std::cout << "PID optical flow thread: " << gettid() << std::endl;
                         while(!exit) {
                           of_wait.wait();
                           of();
