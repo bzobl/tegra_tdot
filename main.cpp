@@ -172,24 +172,27 @@ void capture_loop(LiveStream &stream, Options opts)
   ConditionalWait face_wait(exit, opts.face_detect);
   ConditionalWait ar_wait(exit, opts.augmented_reality);
   ConditionalWait of_wait(exit, opts.optical_flow);
+  ConditionalWait faces_done(exit, false);
   std::vector<std::thread> workers;
 
   std::cout << "PID main thread: " << syscall(SYS_gettid) << std::endl;
 
-  workers.emplace_back([&faces, &exit, &face_wait]()
+  workers.emplace_back([&faces, &exit, &face_wait, &faces_done]()
                        {
                         std::cout << "PID face detection thread: " << syscall(SYS_gettid) << std::endl;
                         while(!exit) {
                           face_wait.wait();
                           faces.detect();
+                          faces_done.notify();
                         }
                        });
 
-  workers.emplace_back([&ar, &exit, &ar_wait]()
+  workers.emplace_back([&ar, &exit, &ar_wait, &faces_done]()
                        {
                         std::cout << "PID augmented reality thread: " << syscall(SYS_gettid) << std::endl;
                         while(!exit) {
                           ar_wait.wait();
+                          faces_done.wait();
                           ar();
                         }
                        });
