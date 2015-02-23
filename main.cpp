@@ -29,6 +29,7 @@ struct Options {
   bool face_detect = false;
   bool augmented_reality = false;
   bool optical_flow = false;
+  std::string face_xml = "face.xml";
 };
 
 std::ostream &operator<<(ostream &out, Options const &o)
@@ -38,7 +39,8 @@ std::ostream &operator<<(ostream &out, Options const &o)
       << "Height:            " << o.height << std::endl
       << "Facedetect:        " << std::boolalpha << o.face_detect << std::endl
       << "Augmented Reality: " << std::boolalpha << o.augmented_reality << std::endl
-      << "Optical Flow:      " << std::boolalpha << o.optical_flow << std::endl;
+      << "Optical Flow:      " << std::boolalpha << o.optical_flow << std::endl
+      << "Haarcascade XML:   " << o.face_xml << std::endl;
   return out;
 }
 
@@ -55,6 +57,7 @@ void usage(char const * const progname)
             << "                    (needed for augmented reality and face visualization of optical flow" << std::endl
             << " -a, --augmented-reality: Enable augmented reality" << std::endl
             << " -o, --optical-flow: Enable optical flow analysis" << std::endl
+            << " -x, --face-xml: XML file containing haarcascade for face detection" << std::endl
             << " --help: Show this help" << std::endl
             << std::endl;
 }
@@ -90,6 +93,13 @@ int check_options(Options &opts, int const argc, char const * const *argv)
         return -1;
       }
       opts.cam_num = atoi(argv[i + 1]);
+      i++;
+    } else if (arg == "-x" || arg == "--face-xml") {
+      if ((i + 1) >= argc) {
+        std::cerr << "missing value for " << arg << std::endl;
+        return -1;
+      }
+      opts.face_xml = std::string(argv[i + 1]);
       i++;
     } else if (arg == "-f" || arg == "--face-detect") {
       opts.face_detect = true;
@@ -152,10 +162,8 @@ void capture_loop(LiveStream &stream, Options opts)
   std::atomic<bool> exit(false);
   cv::Mat image;
 
-  string const face_xml = "./face.xml";
-
   vector<AlphaImage> hats;
-  Faces faces(stream, face_xml);
+  Faces faces(stream, opts.face_xml);
   if (!faces.isReady()) {
     std::cerr << "loading FaceDetection failed" << std::endl;
     return;
