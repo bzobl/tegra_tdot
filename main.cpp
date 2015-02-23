@@ -120,6 +120,16 @@ public:
   ConditionalWait(std::atomic<bool> &exit, bool init) : mExit(exit), mFlag(init) { }
   operator bool() { return mFlag; }
 
+  void set() {
+    mFlag = true;
+    notify();
+  }
+
+  void clear() {
+    mFlag = false;
+    notify();
+  }
+
   void toggle() {
     mFlag = !mFlag;
     notify();
@@ -183,7 +193,7 @@ void capture_loop(LiveStream &stream, Options opts)
                         while(!exit) {
                           face_wait.wait();
                           faces.detect();
-                          faces_done.notify();
+                          faces_done.set();
                           std::cout << "faces done" << std::endl;
                         }
                        });
@@ -194,6 +204,7 @@ void capture_loop(LiveStream &stream, Options opts)
                         while(!exit) {
                           ar_wait.wait();
                           faces_done.wait();
+                          faces_done.clear();
                           std::cout << "starting ar" << std::endl;
                           ar();
                         }
