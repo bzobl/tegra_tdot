@@ -141,8 +141,6 @@ void capture_loop(LiveStream &stream, Options opts)
 {
   std::atomic<bool> exit(false);
   cv::Mat image;
-  cv::Mat lastGrayscale, nowGrayscale;
-  cv::Mat diff, thresh;
 
   string const face_xml = "./face.xml";
 
@@ -206,6 +204,9 @@ void capture_loop(LiveStream &stream, Options opts)
                        });
 
   const std::string live_feed_window = "Live Feed";
+  const std::string opt_flow_window = "Optical Flow";
+  bool opt_flow_result = true;
+  bool live_feed = true;
   /*
   cv::namedWindow(live_feed_window, CV_WINDOW_NORMAL);
   cv::setWindowProperty(live_feed_window, CV_WND_PROP_FULLSCREEN, CV_WND_PROP_FULLSCREEN);
@@ -219,17 +220,21 @@ void capture_loop(LiveStream &stream, Options opts)
     // take new image
     stream.nextFrame(image);
 
-    stream.applyOverlay(image);
+    if (opt_flow_result) {
+      cv::imshow(opt_flow_window, of_visualize.get());
+    }
 
-    cv::imshow("OptFlow", of_visualize.get());
+    if (live_feed) {
+      stream.applyOverlay(image);
 
-    t = ((double) getTickCount() - t) / getTickFrequency();
-    std::stringstream ss;
-    ss << "Time: " << t*1000 << "ms | FPS: " << 1/t;
+      t = ((double) getTickCount() - t) / getTickFrequency();
+      std::stringstream ss;
+      ss << "Time: " << t*1000 << "ms | FPS: " << 1/t;
 
-    cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
+      cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(255, 255, 255));
 
-    cv::imshow(live_feed_window, image);
+      cv::imshow(live_feed_window, image);
+    }
 
     // check for button press for 10ms. necessary for opencv to refresh windows
     char key = cv::waitKey(10);
@@ -239,6 +244,14 @@ void capture_loop(LiveStream &stream, Options opts)
         ar_wait.notify();
         of_wait.notify();
         face_wait.notify();
+        break;
+      case 'l':
+        live_feed = !live_feed;
+        cv::destroyWindow(live_feed_window);
+        break;
+      case 'k':
+        opt_flow_result = !opt_flow_result;
+        cv::destroyWindow(opt_flow_window);
         break;
       case 'v':
         of.toggle_visualization();
