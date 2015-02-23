@@ -17,6 +17,7 @@ private:
   ThreadSafeMat *mVisualizationImage;
   Faces *mFaces = nullptr;
 
+  cv::cuda::Stream mCudaStream;
   cv::cuda::FarnebackOpticalFlow mFarneback;
 
   // pointers to the GpuMats are used to allow fast swapping of last and new images
