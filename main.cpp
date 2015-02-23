@@ -171,8 +171,8 @@ void capture_loop(LiveStream &stream, Options opts)
   std::cout << "OpticalFlow loaded" << std::endl;
 
   ConditionalWait face_wait(exit, opts.face_detect);
-  ConditionalWait ar_wait(exit, opts.face_detect);
-  ConditionalWait of_wait(exit, opts.face_detect);
+  ConditionalWait ar_wait(exit, opts.augmented_reality);
+  ConditionalWait of_wait(exit, opts.optical_flow);
   std::vector<std::thread> workers;
 
   std::cout << "PID main thread: " << getpid() << std::endl;
