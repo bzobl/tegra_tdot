@@ -281,6 +281,14 @@ int main(int argc, char **argv)
 
   std::cout << "Options: " << std::endl << opts;
 
+  int gpu = 0;
+  cv::gpu::setDevice(gpu);
+  cv::gpu::resetDevice();
+  cv::gpu::DeviceInfo info;
+  std::cout << "using GPU" << gpu << ": "
+            << info.freeMemory() / 1024 / 1024 << " / "
+            << info.totalMemory() / 1024 / 1024 << " MB in use" << std::endl;
+
   LiveStream live(opts.cam_num, opts.width, opts.height);
   if (!live.isOpened()) {
     cerr << "Error opening camera " << opts.cam_num << endl;
