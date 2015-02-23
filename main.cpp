@@ -218,6 +218,7 @@ void capture_loop(LiveStream &stream, Options opts)
                           std::cout << "PID optical flow thread: " << syscall(SYS_gettid) << std::endl;
                           while(!exit) {
                             of_wait.wait();
+                            std::cout << "calculating optical flow" << std::endl;
                             of();
                           }
                          });
