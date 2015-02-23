@@ -221,9 +221,7 @@ void capture_loop(LiveStream &stream, Options opts)
 
     stream.applyOverlay(image);
 
-    if (opts.optical_flow) {
-      cv::imshow("OptFlow", of_visualize.get());
-    }
+    cv::imshow("OptFlow", of_visualize.get());
 
     t = ((double) getTickCount() - t) / getTickFrequency();
     std::stringstream ss;
