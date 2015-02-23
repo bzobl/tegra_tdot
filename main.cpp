@@ -194,7 +194,6 @@ void capture_loop(LiveStream &stream, Options opts)
                           face_wait.wait();
                           faces.detect();
                           faces_done.set();
-                          std::cout << "faces done" << std::endl;
                         }
                        });
 
@@ -205,7 +204,6 @@ void capture_loop(LiveStream &stream, Options opts)
                           ar_wait.wait();
                           faces_done.wait();
                           faces_done.clear();
-                          std::cout << "starting ar" << std::endl;
                           ar();
                         }
                        });
