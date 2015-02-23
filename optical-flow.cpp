@@ -242,7 +242,7 @@ cv::Mat OpticalFlow::visualize_optical_flow_faces(cv::Mat const &flowx, cv::Mat 
                                          [](unsigned char v) { return v == DIRECTION_DISTANCING; });
 
       int block_direction = DIRECTION_UNDEFINED;
-      int const threshold = 20;
+      int const threshold = 40;
       if ((sum_approaching > sum_distancing) && (sum_approaching > threshold)) {
           block_direction = DIRECTION_APPROACHING;
       } else if (sum_distancing > threshold) {
