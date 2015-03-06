@@ -14,8 +14,9 @@
 #include "opencv2/cudaoptflow.hpp"
 
 #include "augmented-reality.h"
-#include "faces.h"
+#include "facedetection.h"
 #include "optical-flow.h"
+#include "util.h"
 
 using namespace std;
 using namespace cv;
@@ -163,8 +164,10 @@ void capture_loop(LiveStream &stream, Options opts)
   cv::Mat image;
 
   vector<AlphaImage> hats;
-  Faces faces(stream, opts.face_xml);
-  if (!faces.isReady()) {
+  Faces faces;
+  //FaceDetection<cv::cuda::CascadeClassifier_CUDA> facedetection(stream, faces, opts.face_xml);
+  FaceDetection<cv::CascadeClassifier> facedetection(stream, faces, opts.face_xml);
+  if (!facedetection.isReady()) {
     std::cerr << "loading FaceDetection failed" << std::endl;
     return;
   }
@@ -190,38 +193,38 @@ void capture_loop(LiveStream &stream, Options opts)
   ConditionalWait face_wait(exit, opts.face_detect);
   ConditionalWait ar_wait(exit, opts.augmented_reality);
   ConditionalWait of_wait(exit, opts.optical_flow);
-  ConditionalWait faces_done(exit, false);
   std::vector<std::thread> workers;
 
   std::cout << "PID main thread: " << syscall(SYS_gettid) << std::endl;
 
-  workers.emplace_back([&faces, &exit, &face_wait, &faces_done]()
+  double face_time, ar_time, of_time;
+
+  workers.emplace_back([&facedetection, &ar, &exit, &ar_wait, &face_wait, &face_time, &ar_time]()
                        {
-                        std::cout << "PID face detection thread: " << syscall(SYS_gettid) << std::endl;
+                        std::cout << "PID face detection / augmented reality thread: " << syscall(SYS_gettid) << std::endl;
                         while(!exit) {
                           face_wait.wait();
-                          faces.detect();
-                          faces_done.set();
+
+                          double t = (double) cv::getTickCount();
+                          facedetection.detect();
+                          face_time = ((double) cv::getTickCount() - t) / getTickFrequency();
+
+                          if (ar_wait) {
+                            double t = (double) cv::getTickCount();
+                            ar();
+                            ar_time = ((double) cv::getTickCount() - t) / getTickFrequency();
+                          }
                         }
                        });
 
-  workers.emplace_back([&ar, &exit, &ar_wait, &faces_done]()
-                       {
-                        std::cout << "PID augmented reality thread: " << syscall(SYS_gettid) << std::endl;
-                        while(!exit) {
-                          ar_wait.wait();
-                          faces_done.wait();
-                          faces_done.clear();
-                          ar();
-                        }
-                       });
-
-  workers.emplace_back([&of, &exit, &of_wait]()
+  workers.emplace_back([&of, &exit, &of_wait, &of_time]()
                        {
                         std::cout << "PID optical flow thread: " << syscall(SYS_gettid) << std::endl;
                         while(!exit) {
                           of_wait.wait();
+                          double t = (double) cv::getTickCount();
                           of();
+                          of_time = ((double) cv::getTickCount() - t) / getTickFrequency();
                         }
                        });
 
@@ -236,9 +239,11 @@ void capture_loop(LiveStream &stream, Options opts)
   cv::resizeWindow(live_feed_window, 1920, 1080);
   */
 
-  while (!exit) {
-    double t = (double) getTickCount();
+  double time = 0;
 
+  while (!exit) {
+
+    double t = (double) cv::getTickCount();
     // take new image
     stream.nextFrame(image);
 
@@ -248,18 +253,30 @@ void capture_loop(LiveStream &stream, Options opts)
 
     if (live_feed) {
       stream.applyOverlay(image);
+      double total = ((double) getTickCount() - t) / getTickFrequency();
 
-      t = ((double) getTickCount() - t) / getTickFrequency();
+      std::vector<PrintableTime> times =
+      {
+        { "facedetect: ", &face_time },
+        { "ar:         ", &ar_time },
+        { "opt flow:   ", &of_time },
+        { "total:      ", &total },
+      };
+
+      cv::Point pos = print_times(image, cv::Point(50, 50), times);
+
+      double frame_rate = ((double) getTickCount() - time) / getTickFrequency();
       std::stringstream ss;
-      ss << "Time: " << t*1000 << "ms | FPS: " << 1/t;
-
-      cv::putText(image, ss.str(), Point(50, 50), FONT_HERSHEY_DUPLEX, 1, Scalar(128, 255, 255));
+      ss << "FPS: " << 1/frame_rate;
+      cv::putText(image, ss.str(), pos, FONT_HERSHEY_PLAIN, 1.2, Scalar(128, 255, 255));
 
       cv::imshow(live_feed_window, image);
     }
 
-    // check for button press for 10ms. necessary for opencv to refresh windows
-    char key = cv::waitKey(10);
+    time = (double) getTickCount();
+
+    // check for button press for 30ms. necessary for opencv to refresh windows
+    char key = cv::waitKey(5);
     switch (key) {
       case 'q':
         exit = true;
@@ -282,15 +299,18 @@ void capture_loop(LiveStream &stream, Options opts)
         of_wait.toggle();
         std::cout << "OpticalFlow: " << (of_wait ? "enabled" : "disabled") << std::endl;
         of_visualize.update(cv::Mat::zeros(stream.height(), stream.width(), CV_8UC3));
+        of_time = 0;
         break;
       case 'f':
         face_wait.toggle();
         std::cout << "FaceDetection: " << (face_wait ? "enabled" : "disabled") << std::endl;
+        face_time = 0;
         break;
       case 'a':
         ar_wait.toggle();
         std::cout << "AugmentedReality: " << (ar_wait ? "enabled" : "disabled") << std::endl;
         stream.resetOverlay();
+        ar_time = 0;
         break;
       default:
         break;

@@ -5,6 +5,8 @@
 #include <iostream>
 #include <sstream>
 
+#include "util.h"
+
 std::map<OpticalFlow::VisualizationType, std::string> OpticalFlow::mVisualizationNames = 
 std::map<OpticalFlow::VisualizationType, std::string>(
 {
@@ -71,6 +73,10 @@ void OpticalFlow::load_new_frame()
   std::swap(mNowGpuImg, mLastGpuImg);
 
   mStream.getFrame(image);
+  if (image.empty()) {
+    std::cerr << "OpticalFlow cannot load new frame, aborting" << std::endl;
+    return;
+  }
   cv::cvtColor(image, image, cv::COLOR_BGR2GRAY);
   mNowGpuImg->upload(image);
 }
@@ -327,14 +333,9 @@ void OpticalFlow::operator()()
 
   {
     cv::Point pos(50, 50);
-    int font = cv::FONT_HERSHEY_PLAIN;
-    cv::Scalar color(255, 255, 255);
-    double scale = 1.2;
 
-    struct {
-      std::string text;
-      double *time;
-    } times[] = {
+    std::vector<PrintableTime> times =
+    {
       { "upload:    ", &ul_time_ms },
       { "calc:      ", &calc_time },
       { "download:  ", &dl_time },
@@ -342,12 +343,7 @@ void OpticalFlow::operator()()
       { "total:     ", &total_time_ms },
     };
 
-    for (auto t : times) {
-      std::stringstream ss;
-      ss << t.text << *t.time << "ms";
-      cv::putText(result, ss.str(), pos, font, scale, color);
-      pos.y += 15;
-    }
+    print_times(result, cv::Point(50, 50), times, true);
   }
 
   mVisualizationImage->update(result);

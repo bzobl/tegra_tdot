@@ -2,12 +2,8 @@
 #define FACES_H_INCLUDED
 
 #include <mutex>
-#include <vector>
 
 #include "opencv2/core.hpp"
-#include "opencv2/cuda.hpp"
-
-#include "livestream.h"
 
 class Faces {
 
@@ -17,22 +13,14 @@ private:
     int ttl;
   };
 
-  LiveStream &mStream;
-
-  cv::cuda::CascadeClassifier_CUDA mFaceCascade;
-
   std::mutex mMutex;
   std::vector<FaceEntry> mFaces;
 
-  int const DEFAULT_TTL = 10;
-
-  void addFace(cv::Rect &face);
+  int const DEFAULT_TTL = 3;
 
 public:
-  Faces(LiveStream &stream, std::string const &face_cascade);
 
-  bool isReady();
-  void detect();
+  void addFace(cv::Rect &face);
 
   void tick();
 
