@@ -21,7 +21,7 @@ private:
 public:
   AugmentedReality(LiveStream &stream, Faces *faces);
 
-  void addHat(std::string const &file);
+  void addHat(std::string const &file, double width_scale, double x_offset_scale);
 
   bool ready();
   void operator()();

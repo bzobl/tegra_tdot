@@ -174,7 +174,10 @@ void capture_loop(LiveStream &stream, Options opts)
   std::cout << "FaceDetection loaded" << std::endl;
 
   AugmentedReality ar(stream, &faces);
-  ar.addHat("sombrero.png");
+  ar.addHat("sombrero.png", 2, 4);
+  ar.addHat("tophat.png", 1.2, 10);
+  ar.addHat("crown.png", 1.2, 16);
+  ar.addHat("fancy.png", 2, 4);
   if (!ar.ready()) {
     std::cerr << "loading AugmentedReality failed" << std::endl;
     return;

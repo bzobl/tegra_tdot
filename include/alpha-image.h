@@ -11,15 +11,19 @@ private:
   cv::Mat mAlpha;
 
   double mRatio;
+  double mToFaceWidthScale;
+  double mToFaceOffset;
 
 public:
-  AlphaImage(std::string filename);
+  AlphaImage(std::string filename, double to_face_scale, double to_face_offset);
 
   int width() const;
   int height() const;
 
-  // scaled height, when width is given
-  int height(int width) const;
+  // scaled width and height, when width of face is given
+  int width(int face_width) const;
+  int height(int face_width) const;
+  int offset(int face_width) const;
 
   void write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI) const;
 };

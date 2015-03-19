@@ -5,9 +5,9 @@ AugmentedReality::AugmentedReality(LiveStream &stream, Faces *faces)
 {
 }
 
-void AugmentedReality::addHat(std::string const &file)
+void AugmentedReality::addHat(std::string const &file, double width_scale, double x_offset_scale)
 {
-  mHats.emplace_back(file);
+  mHats.emplace_back(file, width_scale, x_offset_scale);
 }
 
 bool AugmentedReality::ready()
@@ -26,13 +26,15 @@ void AugmentedReality::operator()()
 
   mStream.resetOverlay();
 
-  for (cv::Rect face : mFaces->getFaces()) {
-    AlphaImage &hat(mHats[0]); 
+  int hat_idx = 0;
 
-    int width = face.width * 2;
-    int height = hat.height(width);
-    int x = face.x - width/4;
-    int y = face.y - height;
-    mStream.addImageToOverlay(hat, width, x, y);
+  for (cv::Rect face : mFaces->getFaces()) {
+    int idx = hat_idx++ % mHats.size();
+    AlphaImage &hat(mHats[idx]); 
+
+    int width = hat.width(face.width);
+    int x = face.x - hat.offset(face.width);
+    int y = face.y - hat.height(face.width);
+    mStream.addImageToOverlay(hat, face.width, x, y);
   }
 }

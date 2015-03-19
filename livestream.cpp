@@ -125,7 +125,7 @@ void LiveStream::resetOverlay()
 
 void LiveStream::addImageToOverlay(AlphaImage const &image, int width, int x, int y)
 {
-  cv::Rect roi(x, y, width, image.height(width));
+  cv::Rect roi(x, y, image.width(width), image.height(width));
   image.write_scaled(mOverlay, mOverlayAlpha, roi);
 }
 

@@ -4,7 +4,9 @@
 
 #include "opencv2/highgui/highgui.hpp"
 
-AlphaImage::AlphaImage(std::string filename)
+AlphaImage::AlphaImage(std::string filename, double to_face_scale, double to_face_offset)
+                      : mToFaceWidthScale(to_face_scale),
+                        mToFaceOffset(to_face_offset)
 {
   cv::Mat image = cv::imread(filename, cv::IMREAD_UNCHANGED);
   mColor = cv::Mat(image.rows, image.cols, CV_8UC3);
@@ -28,9 +30,20 @@ int AlphaImage::height() const
   return mColor.rows;
 }
 
-int AlphaImage::height(int width) const
+int AlphaImage::width(int face_width) const
 {
-  return mColor.cols / mRatio;
+  return face_width * mToFaceWidthScale;
+}
+
+int AlphaImage::height(int face_width) const
+{
+  return width(face_width) / mRatio;
+}
+
+int AlphaImage::offset(int face_width) const
+{
+  if (mToFaceOffset == 0) return 0;
+  return width(face_width) / mToFaceOffset;
 }
 
 void AlphaImage::write_scaled(cv::Mat &color, cv::Mat &alpha, cv::Rect targetROI) const
