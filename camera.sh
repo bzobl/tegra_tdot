@@ -25,7 +25,21 @@
 
 DEVICE=/dev/video0
 
-v4l2-ctl -d $DEVICE -c white_balance_temperature_auto=0
+while getopts ":c:" opt; do
+  case $opt in
+    c)
+      DEVICE=/dev/video$OPTARG
+      ;;
+    ?)
+      echo "Invalid option: -$OPTARG"
+      exit 1
+      ;;
+  esac
+done
+
+echo "Setting default parameter for $DEVICE"
+
+v4l2-ctl -d $DEVICE -c white_balance_temperature_auto=1
 v4l2-ctl -d $DEVICE -c power_line_frequency=1
-v4l2-ctl -d $DEVICE -c exposure_auto=1
+v4l2-ctl -d $DEVICE -c exposure_auto=3
 v4l2-ctl -d $DEVICE -c focus_auto=0
