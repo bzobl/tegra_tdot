@@ -158,6 +158,20 @@ public:
   }
 };
 
+cv::Mat detect_edges(LiveStream &stream)
+{
+  cv::Mat edges;
+
+  int const filter_size = 7;
+
+  stream.getFrame(edges);
+  cv::cvtColor(edges, edges, cv::COLOR_BGR2GRAY);
+  cv::GaussianBlur(edges, edges, Size(filter_size, filter_size), 2.5, 2.5);
+  cv::Canny(edges, edges, 1, 25, 3);
+
+  return edges;
+}
+
 void capture_loop(LiveStream &stream, Options opts)
 {
   std::atomic<bool> exit(false);
@@ -233,8 +247,10 @@ void capture_loop(LiveStream &stream, Options opts)
 
   const std::string live_feed_window = "Live Feed";
   const std::string opt_flow_window = "Optical Flow";
+  const std::string edges_window = "Edge Detection";
   bool opt_flow_result = true;
   bool live_feed = true;
+  bool edge_detection = true;
   /*
   cv::namedWindow(live_feed_window, CV_WINDOW_NORMAL);
   cv::setWindowProperty(live_feed_window, CV_WND_PROP_FULLSCREEN, CV_WND_PROP_FULLSCREEN);
@@ -252,6 +268,11 @@ void capture_loop(LiveStream &stream, Options opts)
 
     if (opt_flow_result) {
       cv::imshow(opt_flow_window, of_visualize.get());
+    }
+
+    if (edge_detection) {
+      cv::Mat edges = detect_edges(stream);
+      cv::imshow(edges_window, edges);
     }
 
     if (live_feed) {
@@ -314,6 +335,13 @@ void capture_loop(LiveStream &stream, Options opts)
         std::cout << "AugmentedReality: " << (ar_wait ? "enabled" : "disabled") << std::endl;
         stream.resetOverlay();
         ar_time = 0;
+        break;
+      case 'e':
+        edge_detection = !edge_detection;
+        std::cout << "EdgeDetection: " << (edge_detection ? "enabled" : "disabled") << std::endl;
+        if (!edge_detection) {
+          cv::destroyWindow(edges_window);
+        }
         break;
       default:
         break;
