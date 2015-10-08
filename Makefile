@@ -7,11 +7,14 @@ override CFLAGS += -Wall -O3
 
 RM = rm -f
 
+CUDA_VERS = 6.5
+
 C_INCL = ./include /opt/opencv3/include
 INCLUDES = $(addprefix -I, $(C_INCL))
 
 C_LIB_DIRS = /opt/opencv3/lib				\
-						 /usr/local/cuda-6.0/lib
+						 /usr/local/cuda-$(CUDA_VERS)/lib	 \
+						 /opt/cuda-$(CUDA_VERS)/lib
 LIB_DIRS = $(addprefix -L, $(C_LIB_DIRS))
 
 OPENCV_LIBS = core cuda cudaoptflow highgui imgproc objdetect imgcodecs videoio
@@ -49,7 +52,7 @@ $(PROJECT): $(CPP_OBJS)
 	@echo ' '
 
 schroot:
-	schroot -c exp -- make $(PROJECT)
+	schroot -c exp -- make PREFIX="" $(PROJECT)
 
 version:
 	$(CC) --version
