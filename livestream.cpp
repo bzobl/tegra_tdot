@@ -40,7 +40,7 @@ bool LiveStream::openCamera(int num, int width, int height)
     return false;
   }
 
-  double codec = FOURCC('Y', 'U', 'Y', 'V');
+  double codec = FOURCC('M', 'J', 'P', 'G');
   if (!mCamera.set(cv::CAP_PROP_FOURCC, codec))
   //if (!mCamera.set(cv::CAP_PROP_FOURCC, FOURCC('M', 'J', 'P', 'G')))
   {
@@ -60,6 +60,7 @@ bool LiveStream::openCamera(int num, int width, int height)
   if (   ((width != -1) && (mStreamWidth != width))
       || ((height != -1) && (mStreamHeight != height))) {
     std::cerr << "could not set resolution " << width << "x" << height << std::endl;
+    mCamera.release();
     return false;
   }
 
@@ -75,10 +76,12 @@ void LiveStream::getCurrentFrame()
   mCamera.read(yuv);
   cv::cvtColor(yuv, mCurrentFrame, cv::COLOR_YUV2BGR);
   */
+  /*
   cv::Mat jpg;
   mCamera.read(jpg);
   mCurrentFrame = cv::imdecode(jpg, 1);
-  //mCamera.read(mCurrentFrame);
+  */
+  mCamera.read(mCurrentFrame);
 }
 
 bool LiveStream::isOpened() const

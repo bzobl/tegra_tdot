@@ -140,7 +140,7 @@ void FaceDetection<TCascade>::detect()
   };
 
   print_times(debug, cv::Point(50, 50), times);
-  cv::imshow(debug_window_name, debug);
+  //cv::imshow(debug_window_name, debug);
 }
 
 #endif
