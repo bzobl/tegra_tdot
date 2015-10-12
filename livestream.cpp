@@ -1,10 +1,12 @@
 #include "livestream.h"
 
-#include "opencv2/videoio.hpp"
-#include "opencv2/imgproc.hpp"
-
 #include <cassert>
 #include <iostream>
+
+#include <opencv2/videoio.hpp>
+#include <opencv2/imgproc.hpp>
+
+#include "StopWatch.h"
 
 LiveStream::LiveStream(int camNum) : LiveStream(camNum, -1, -1)
 {
@@ -23,6 +25,7 @@ LiveStream::LiveStream(int camNum, int width, int height)
 
 LiveStream::~LiveStream()
 {
+  stopPollingThread();
   if (mCamera.isOpened()) {
     mCamera.release();
   }
@@ -40,7 +43,7 @@ bool LiveStream::openCamera(int num, int width, int height)
     return false;
   }
 
-  double codec = FOURCC('Y', 'U', 'Y', 'V');
+  double codec = FOURCC('M', 'J', 'P', 'G');
   if (!mCamera.set(cv::CAP_PROP_FOURCC, codec))
   //if (!mCamera.set(cv::CAP_PROP_FOURCC, FOURCC('M', 'J', 'P', 'G')))
   {
@@ -60,6 +63,7 @@ bool LiveStream::openCamera(int num, int width, int height)
   if (   ((width != -1) && (mStreamWidth != width))
       || ((height != -1) && (mStreamHeight != height))) {
     std::cerr << "could not set resolution " << width << "x" << height << std::endl;
+    mCamera.release();
     return false;
   }
 
@@ -75,10 +79,12 @@ void LiveStream::getCurrentFrame()
   mCamera.read(yuv);
   cv::cvtColor(yuv, mCurrentFrame, cv::COLOR_YUV2BGR);
   */
+  /*
   cv::Mat jpg;
   mCamera.read(jpg);
   mCurrentFrame = cv::imdecode(jpg, 1);
-  //mCamera.read(mCurrentFrame);
+  */
+  mCamera.read(mCurrentFrame);
 }
 
 bool LiveStream::isOpened() const
@@ -98,17 +104,58 @@ int LiveStream::height() const
 
 void LiveStream::getFrame(cv::Mat &frame)
 {
-  std::unique_lock<std::mutex> l(mFrameMutex);
+  //std::unique_lock<std::mutex> l(mFrameMutex);
 
   mCurrentFrame.copyTo(frame);
 }
 
 void LiveStream::nextFrame(cv::Mat &frame)
 {
-  std::unique_lock<std::mutex> l(mFrameMutex);
+  //std::unique_lock<std::mutex> l(mFrameMutex);
 
   getCurrentFrame();
   mCurrentFrame.copyTo(frame);
+}
+
+void LiveStream::startPollingThread(int fps)
+{
+  mThreadExit = false;
+  // thread to query camera stream in 30 fps frequency
+  // necessary, since reading from the camera does not return the latest
+  // but the next image
+  mPollingThread = new std::thread([this, fps](void)
+                        {
+                          double target_delay_ms = 1 / fps * 1000;
+                          StopWatch timer;
+                          while (!this->mThreadExit) {
+                            timer.start();
+                            this->frameTick();
+                            timer.stop();
+                            double delay = target_delay_ms - timer.getDurationMs();
+                            if (delay > 0) {
+                              std::this_thread::sleep_for(std::chrono::duration<double, std::milli>(delay));
+                            }
+                          }
+                        });
+}
+
+void LiveStream::stopPollingThread()
+{
+  if (mPollingThread != nullptr) {
+    mThreadExit = true;
+
+    mPollingThread->join();
+
+    delete mPollingThread;
+    mPollingThread = nullptr;
+  }
+}
+
+void LiveStream::frameTick()
+{
+  //std::unique_lock<std::mutex> l(mFrameMutex);
+
+  getCurrentFrame();
 }
 
 std::recursive_mutex &LiveStream::getOverlayMutex()

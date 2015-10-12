@@ -378,6 +378,7 @@ int main(int argc, char **argv)
     cerr << "Error opening camera " << opts.cam_num << endl;
     return -1;
   }
+  live.startPollingThread(30);
 
   capture_loop(live, opts);
 

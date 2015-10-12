@@ -6,6 +6,7 @@
 
 #include "alpha-image.h"
 #include <mutex>
+#include <thread>
 
 class LiveStream {
 
@@ -24,6 +25,9 @@ private:
   mutable std::mutex mFrameMutex;
   mutable std::recursive_mutex mOverlayMutex;
 
+  bool mThreadExit = true;
+  std::thread *mPollingThread = nullptr;
+
   bool openCamera(int num, int width, int height);
   void getCurrentFrame();
 
@@ -40,6 +44,9 @@ public:
 
   void getFrame(cv::Mat &frame);
   void nextFrame(cv::Mat &frame);
+  void startPollingThread(int fps);
+  void stopPollingThread();
+  void frameTick();
 
   std::recursive_mutex &getOverlayMutex();
   void resetOverlay();
